@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Provider } from 'react-redux';
+import {Provider} from 'react-redux';
 import { Toaster } from 'react-hot-toast';
-import { store } from './store';
+import {store} from './store';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import SignIn from './pages/auth/SignIn';
@@ -18,6 +18,7 @@ import NotFound from './pages/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
+
   return (
     <Provider store={store}>
       <Router>

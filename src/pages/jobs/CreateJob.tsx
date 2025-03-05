@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
 import { createJob } from '../../store/slices/jobsSlice';
 import { Briefcase, MapPin, DollarSign, Calendar, Clock, Globe, Building2, Trash2, Plus, AlertCircle } from 'lucide-react';
+import {Company, Job} from "../../types";
 
 export default function CreateJob() {
   const navigate = useNavigate();
@@ -12,16 +13,16 @@ export default function CreateJob() {
   const { user } = useSelector((state: RootState) => state.auth);
 
   const [step, setStep] = React.useState<'basics' | 'details' | 'preview'>('basics');
-  const [formData, setFormData] = React.useState({
+  const [formData, setFormData] = React.useState<Job>({
     title: '',
     description: '',
     requirements: [''],
     type: 'full-time',
     location: '',
     remote: false,
-    salary_min: '',
-    salary_max: '',
-    expires_at: '',
+    salaryMin: '',
+    salaryMax: '',
+    expiresAt: '',
     status: 'draft' as 'draft' | 'published',
     featured: false
   });
@@ -30,17 +31,24 @@ export default function CreateJob() {
     e.preventDefault();
     if (!user) return;
 
-    const result = await dispatch(createJob({
-      ...formData,
-      company_id: user.id,
-      requirements: formData.requirements.filter(Boolean),
-      salary_min: formData.salary_min ? parseInt(formData.salary_min) : undefined,
-      salary_max: formData.salary_max ? parseInt(formData.salary_max) : undefined,
-    }));
+    try {
+      await dispatch(createJob({
+        ...formData,
+        company: '/api/companies/'+(user as Company).company as any,
+        requirements: formData.requirements.filter(Boolean),
+        salaryMin: formData.salaryMin ? parseInt(formData.salaryMin as string) : undefined,
+        salaryMax: formData.salaryMax ? parseInt(formData.salaryMax as string) : undefined,
+      }));
 
-    if (!result.error) {
       navigate('/dashboard/jobs');
-    }
+    }catch (e){}
+
+
+
+
+    // if (!result.error) {
+    //
+    // }
   };
 
   const handleRequirementChange = (index: number, value: string) => {
@@ -184,7 +192,7 @@ export default function CreateJob() {
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <div>
-          <label htmlFor="salary_min" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="salaryMin" className="block text-sm font-medium text-gray-700">
             Salaire minimum (annuel)
           </label>
           <div className="mt-1 relative rounded-md shadow-sm">
@@ -193,10 +201,10 @@ export default function CreateJob() {
             </div>
             <input
               type="number"
-              name="salary_min"
-              id="salary_min"
-              value={formData.salary_min}
-              onChange={(e) => setFormData({ ...formData, salary_min: e.target.value })}
+              name="salaryMin"
+              id="salaryMin"
+              value={formData.salaryMin}
+              onChange={(e) => setFormData({ ...formData, salaryMin: e.target.value })}
               className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg"
               placeholder="ex: 45000"
             />
@@ -204,7 +212,7 @@ export default function CreateJob() {
         </div>
 
         <div>
-          <label htmlFor="salary_max" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="salaryMax" className="block text-sm font-medium text-gray-700">
             Salaire maximum (annuel)
           </label>
           <div className="mt-1 relative rounded-md shadow-sm">
@@ -213,10 +221,10 @@ export default function CreateJob() {
             </div>
             <input
               type="number"
-              name="salary_max"
-              id="salary_max"
-              value={formData.salary_max}
-              onChange={(e) => setFormData({ ...formData, salary_max: e.target.value })}
+              name="salaryMax"
+              id="salaryMax"
+              value={formData.salaryMax}
+              onChange={(e) => setFormData({ ...formData, salaryMax: e.target.value })}
               className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg"
               placeholder="ex: 65000"
             />
@@ -237,8 +245,8 @@ export default function CreateJob() {
             name="expires_at"
             id="expires_at"
             required
-            value={formData.expires_at}
-            onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })}
+            value={formData.expiresAt}
+            onChange={(e) => setFormData({ ...formData, expiresAt: e.target.value })}
             className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg"
             min={new Date().toISOString().split('T')[0]}
           />
@@ -366,6 +374,17 @@ export default function CreateJob() {
     </div>
   );
 
+  const displaySalary = () => {
+    if(formData.salaryMin && formData.salaryMax){
+      return `${parseInt(formData.salaryMin).toLocaleString()} $ - ${parseInt(formData.salaryMax).toLocaleString()} $`
+    }else if(formData.salaryMin){
+      return `À partir de ${parseInt(formData.salaryMin).toLocaleString()} $`
+    }else if(formData.salaryMax){
+      return `Jusqu'à ${parseInt(formData.salaryMax).toLocaleString()} $`
+    }
+
+    return 'Non spécifié'
+  }
   const renderPreviewStep = () => (
     <div className="space-y-8">
       <div className="bg-white overflow-hidden shadow rounded-lg">
@@ -393,18 +412,12 @@ export default function CreateJob() {
             <div className="flex items-center text-gray-500">
               <DollarSign className="h-5 w-5 mr-2" />
               <span>
-                {formData.salary_min && formData.salary_max
-                  ? `${parseInt(formData.salary_min).toLocaleString()} € - ${parseInt(formData.salary_max).toLocaleString()} €`
-                  : formData.salary_min
-                  ? `À partir de ${parseInt(formData.salary_min).toLocaleString()} €`
-                  : formData.salary_max
-                  ? `Jusqu'à ${parseInt(formData.salary_max).toLocaleString()} €`
-                  : 'Non spécifié'}
+                {displaySalary()}
               </span>
             </div>
             <div className="flex items-center text-gray-500">
               <Calendar className="h-5 w-5 mr-2" />
-              <span>Expire le {new Date(formData.expires_at).toLocaleDateString()}</span>
+              <span>Expire le {new Date(formData.expiresAt).toLocaleDateString()}</span>
             </div>
           </div>
 

@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { supabase } from '../../lib/supabase';
 import type { User } from '../../types';
 import toast from 'react-hot-toast';
+import {ApiGeneric} from "../../api";
 
 interface AuthState {
   user: User | null;
@@ -15,53 +16,52 @@ const initialState: AuthState = {
   error: null,
 };
 
+const api = new ApiGeneric();
 export const signIn = createAsyncThunk(
   'auth/signIn',
   async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
     try {
       // Connexion de l'utilisateur
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const data = await api.onSend('/login', {
+        method: 'POST',
+        data: { username: email, password },
+        headers: {
+          "Content-Type": "application/json"
+        }
       });
 
-      if (authError) throw authError;
-
-      // Récupération du profil utilisateur avec son rôle
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', authData.user.id)
-        .single();
-
-      if (profileError) throw profileError;
+      let company = {}
+      if(data.user.company){
+        company = {company: data.user.company}
+      }
 
       // Retourne les données de l'utilisateur avec son rôle
       return {
-        id: authData.user.id,
-        email: authData.user.email,
-        role: profileData.role,
-        created_at: authData.user.created_at,
+        id: data.user.id,
+        email: data.user.email,
+        role: data.user.role,
+        created_at: data.user.created_at,
+        token: data.token,
+        ...company
       } as User;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      console.log(error)
+      return rejectWithValue(error.errors.message ?? error.errors.detail);
     }
   }
 );
 
 export const signUp = createAsyncThunk(
   'auth/signUp',
-  async ({ email, password, role }: { email: string; password: string; role: 'company' | 'candidate' }, { rejectWithValue }) => {
+  async ({ email, password, role,first_name,last_name,company_name }: { email: string; password: string; role: 'company' | 'candidate' ;first_name: string;last_name: string;company_name:string}, { rejectWithValue }) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { role },
-        },
-      });
-
-      if (error) throw error;
+      const data = await api.onSend('/api/register', {
+        method: 'POST',
+        data: { email, password, role,first_name,last_name,company_name },
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
 
       // Retourne les données de l'utilisateur avec son rôle
       return {
@@ -71,15 +71,16 @@ export const signUp = createAsyncThunk(
         created_at: data.user?.created_at,
       } as User;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.errors.message);
     }
   }
 );
 
 export const signOut = createAsyncThunk('auth/signOut', async (_, { rejectWithValue }) => {
   try {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    // const { error } = await supabase.auth.signOut();
+    // if (error) throw error;
+    sessionStorage.removeItem('tia-wfs-token');
   } catch (error: any) {
     return rejectWithValue(error.message);
   }

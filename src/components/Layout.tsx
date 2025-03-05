@@ -1,10 +1,11 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
-import { signOut } from '../store/slices/authSlice';
+import {setUser, signOut} from '../store/slices/authSlice';
 import { Briefcase, Menu, X, User, Bell } from 'lucide-react';
 import twfs from '../assets/tia-wfs.png';
+import {ApiGeneric} from "../api";
 
 export default function Layout() {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -12,6 +13,27 @@ export default function Layout() {
   const location = useLocation();
   const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
+  const [loading, setLoading] = React.useState(true);
+
+  useEffect(() => {
+    const token = sessionStorage.getItem('tia-wfs-token');
+    if(!user){
+      if (token) {
+        const api = new ApiGeneric()
+        api.onSend('/api/me').then((data) => {
+          dispatch(setUser(data));
+          setLoading(false);
+        }).catch(() => {
+          setLoading(false);
+        });
+      }else {
+        setLoading(false);
+      }
+    }else {
+      setLoading(false);
+    }
+
+  }, []);
 
   // Navigation de base pour les visiteurs
   const publicNavigation = [
@@ -22,20 +44,25 @@ export default function Layout() {
 
   // Navigation pour les utilisateurs connectés
   const userNavigation = user?.role === 'company' ? [
-    { name: 'Tableau de bord', href: '/dashboard' },
+    // { name: 'Tableau de bord', href: '/dashboard' },
     { name: 'Offres d\'emploi', href: '/dashboard/jobs' },
     { name: 'Candidatures', href: '/dashboard/applications' },
     { name: 'Candidats', href: '/dashboard/candidates' },
   ] : [
-    { name: 'Tableau de bord', href: '/dashboard' },
+    // { name: 'Tableau de bord', href: '/dashboard' },
     { name: 'Mes candidatures', href: '/dashboard/applications' },
-    { name: 'Entreprises', href: '/dashboard/companies' },
+    { name: 'Offres d\'emploi', href: '/jobs' },
+    { name: 'Entreprises', href: '/companies' },
   ];
 
   const handleSignOut = () => {
     dispatch(signOut());
     setShowProfileMenu(false);
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
       <div className="min-h-screen bg-gray-50">

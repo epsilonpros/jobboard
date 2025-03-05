@@ -32,14 +32,8 @@ export default function JobDetails() {
 
     setIsSubmitting(true);
     try {
-      console.log({
-          job_id: job.id,
-          candidate_id: user.id,
-          cover_letter: coverLetter,
-    })
-      const result = await dispatch(applyToJob({
-        job_id: job.id,
-        candidate_id: user.id,
+      await dispatch(applyToJob({
+        job_id: job.id as string,
         cover_letter: coverLetter,
       })).unwrap();
 
@@ -81,7 +75,7 @@ export default function JobDetails() {
     );
   }
 
-  const isOwnJob = user?.role === 'company' && user.id === job.company.id;
+  const isOwnJob = user?.role === 'company' && user.company === job.company.id;
   const formatSalary = (min?: number, max?: number) => {
     if (!min && !max) return 'Not specified';
     if (!max) return `$${min.toLocaleString()}+`;
@@ -157,11 +151,11 @@ export default function JobDetails() {
             </div>
             <div className="flex items-center text-gray-500">
               <DollarSign className="h-5 w-5 mr-2" />
-              <span>{formatSalary(job.salary_min, job.salary_max)}</span>
+              <span>{formatSalary(job.salaryMin, job.salaryMax)}</span>
             </div>
             <div className="flex items-center text-gray-500">
               <Clock className="h-5 w-5 mr-2" />
-              <span>Publié {new Date(job.created_at).toLocaleDateString()}</span>
+              <span>Publié {new Date(job.createdAt).toLocaleDateString()}</span>
             </div>
           </div>
         </div>

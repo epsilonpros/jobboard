@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Building2, MapPin, Globe, Users, Search, Filter, Briefcase, ChevronRight } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import {ApiGeneric} from "../../api";
 
 interface Company {
   id: string;
@@ -13,7 +14,7 @@ interface Company {
   location: string;
   website: string | null;
   verified: boolean;
-  jobs_count: number;
+  jobsCount: number;
 }
 
 export default function Companies() {
@@ -34,34 +35,30 @@ export default function Companies() {
 
   const fetchCompanies = async () => {
     try {
-      let query = supabase
-        .from('companies')
-        .select(`
-          *,
-          jobs!inner(id)
-        `)
-        .eq('verified', true);
+      const api = new ApiGeneric()
 
-      if (filters.industry) {
-        query = query.eq('industry', filters.industry);
-      }
-      if (filters.location) {
-        query = query.eq('location', filters.location);
-      }
-      if (filters.size) {
-        query = query.eq('size', filters.size);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-
-      // Transform data to include jobs count
-      const companiesWithJobsCount = data.map(company => ({
-        ...company,
-        jobs_count: company.jobs?.length || 0
-      }));
-
-      setCompanies(companiesWithJobsCount);
+      // let query = supabase
+      //   .from('companies')
+      //   .select(`
+      //     *,
+      //     jobs!inner(id)
+      //   `)
+      //   .eq('verified', true);
+      //
+      // if (filters.industry) {
+      //   query = query.eq('industry', filters.industry);
+      // }
+      // if (filters.location) {
+      //   query = query.eq('location', filters.location);
+      // }
+      // if (filters.size) {
+      //   query = query.eq('size', filters.size);
+      // }
+      //
+      // const { data, error } = await query;
+      // if (error) throw error;
+      const data = await api.onSend('/api/companies?verified=true')
+      setCompanies(data.member);
     } catch (error) {
       console.error('Erreur lors du chargement des entreprises:', error);
     } finally {
@@ -78,7 +75,7 @@ export default function Companies() {
         company.industry?.toLowerCase().includes(searchLower)
       );
     }
-    if (filters.hasOpenings && company.jobs_count === 0) {
+    if (filters.hasOpenings && company.jobsCount === 0) {
       return false;
     }
     return true;
@@ -257,7 +254,7 @@ export default function Companies() {
                     </div>
                     <div className="flex items-center text-sm text-gray-500">
                       <Briefcase className="h-4 w-4 mr-2" />
-                      {company.jobs_count} offres d'emploi
+                      {company.jobsCount} offres d'emploi
                     </div>
                   </div>
 

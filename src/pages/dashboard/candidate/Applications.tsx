@@ -101,12 +101,12 @@ export default function CandidateApplications() {
                       <div className="sm:flex">
                         <p className="flex items-center text-sm text-gray-500">
                           <Calendar className="flex-shrink-0 mr-1.5 h-5 w-5" />
-                          Postulé le {new Date(application.created_at).toLocaleDateString()}
+                          Postulé le {new Date(application.createdAt).toLocaleDateString()}
                         </p>
                       </div>
                       <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
                         <Link
-                          to={`/jobs/${application.job_id}`}
+                          to={`/jobs/${application.job.id}`}
                           className="text-indigo-600 hover:text-indigo-500"
                         >
                           Voir l'offre

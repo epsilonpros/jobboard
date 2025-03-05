@@ -12,18 +12,17 @@ export default function SignUp() {
   
   const [step, setStep] = React.useState<'select-type' | 'candidate' | 'company'>('select-type');
   const [role, setRole] = React.useState<'company' | 'candidate' | null>(null);
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
   const [confirmPassword, setConfirmPassword] = React.useState('');
-  const [isEmailFocused, setIsEmailFocused] = React.useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = React.useState(false);
   const [isConfirmPasswordFocused, setIsConfirmPasswordFocused] = React.useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
-    if (!role || password !== confirmPassword) return;
+    const form = new FormData(e.target);
+    const data = Object.fromEntries(form)
+    if (!role || data.password !== confirmPassword) return;
     
-    const result = await dispatch(signUp({ email, password, role }));
+    const result = await dispatch(signUp({ ...data, role }));
     if (!result.error) {
       navigate('/dashboard');
     }
@@ -91,7 +90,7 @@ export default function SignUp() {
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-indigo-600 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-sm transition-colors"
         >
           <Home className="h-4 w-4 mr-2" />
-          Retour à l'accueil
+          Accueil
         </Link>
       </div>
 
@@ -188,141 +187,181 @@ export default function SignUp() {
 
                     <form className="space-y-6" onSubmit={handleSubmit}>
                       {error && (
-                        <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-md" role="alert">
-                          <div className="flex">
-                            <div className="flex-shrink-0">
-                              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                            <div className="ml-3">
-                              <p className="text-sm text-red-700">{error}</p>
+                          <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-md" role="alert">
+                            <div className="flex">
+                              <div className="flex-shrink-0">
+                                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                        clipRule="evenodd"/>
+                                </svg>
+                              </div>
+                              <div className="ml-3">
+                                <p className="text-sm text-red-700">{error}</p>
+                              </div>
                             </div>
                           </div>
-                        </div>
                       )}
 
+                      {role === 'candidate' && <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div className="group">
+                          <label
+                              htmlFor="first_name"
+                              className={`block text-sm font-medium transition-colors duration-200 text-gray-700 group-focus:text-indigo-600`}
+                          >
+                            Prenom
+                          </label>
+                          <div className="mt-1 relative rounded-md shadow-sm">
+                            <input
+                                id="first_name"
+                                name="first_name"
+                                type="text"
+                                required
+                                className={`appearance-none block w-full pl-3 pr-3 py-3 border text-gray-300 focus:text-indigo-600 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 sm:text-sm`}
+                                placeholder="Votre prénom"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label
+                              htmlFor="last_name"
+                              className={`block text-sm font-medium transition-colors duration-200`}
+                          >
+                            Nom
+                          </label>
+                          <div className="mt-1 relative rounded-md shadow-sm">
+                            <input
+                                id="last_name"
+                                name="last_name"
+                                type="text"
+                                required
+                                className={`appearance-none block w-full pl-3 pr-3 py-3 border text-gray-300 focus:text-indigo-600 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 sm:text-sm`}
+                                placeholder="Votre Nom"
+                            />
+                          </div>
+                        </div>
+                      </div>}
+
+                      {role !== 'candidate' && <div>
+                        <label
+                            htmlFor="company_name"
+                            className={`block text-sm font-medium transition-colors duration-200`}
+                        >
+                          Nom
+                        </label>
+                        <div className="mt-1 relative rounded-md shadow-sm">
+                          <input
+                              id="company_name"
+                              name="company_name"
+                              type="text"
+                              required
+                              className={`appearance-none block w-full pl-3 pr-3 py-3 border text-gray-300 focus:text-indigo-600 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 sm:text-sm`}
+                              placeholder="Nom de l'entreprise"
+                          />
+                        </div>
+                      </div>
+                      }
+
                       <div>
-                        <label 
-                          htmlFor="email" 
-                          className={`block text-sm font-medium transition-colors duration-200 ${
-                            isEmailFocused ? 'text-indigo-600' : 'text-gray-700'
-                          }`}
+                        <label
+                            htmlFor="email"
+                            className={`block text-sm font-medium transition-colors duration-200`}
                         >
                           Adresse e-mail
                         </label>
                         <div className="mt-1 relative rounded-md shadow-sm">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Mail 
-                              className={`h-5 w-5 transition-colors duration-200 ${
-                                isEmailFocused ? 'text-indigo-600' : 'text-gray-400'
-                              }`} 
+                            <Mail
+                                className={`h-5 w-5 transition-colors duration-200 focus:text-indigo-600 text-gray-400`}
                             />
                           </div>
                           <input
-                            id="email"
-                            name="email"
-                            type="email"
-                            autoComplete="email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            onFocus={() => setIsEmailFocused(true)}
-                            onBlur={() => setIsEmailFocused(false)}
-                            className={`appearance-none block w-full pl-10 pr-3 py-3 border ${
-                              isEmailFocused ? 'border-indigo-600' : 'border-gray-300'
-                            } rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 sm:text-sm`}
-                            placeholder="vous@exemple.fr"
+                              id="email"
+                              name="email"
+                              type="email"
+                              autoComplete="email"
+                              required
+                              className={`appearance-none block w-full pl-10 pr-3 py-3 border focus:text-indigo-600 text-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 sm:text-sm`}
+                              placeholder="candidat@exemple.fr"
                           />
                         </div>
                       </div>
 
                       <div>
-                        <label 
-                          htmlFor="password" 
-                          className={`block text-sm font-medium transition-colors duration-200 ${
-                            isPasswordFocused ? 'text-indigo-600' : 'text-gray-700'
-                          }`}
+                        <label
+                            htmlFor="password"
+                            className={`block text-sm font-medium transition-colors duration-200 text-gray-700 focus:text-indigo-600`}
                         >
                           Mot de passe
                         </label>
                         <div className="mt-1 relative rounded-md shadow-sm">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Lock 
-                              className={`h-5 w-5 transition-colors duration-200 ${
-                                isPasswordFocused ? 'text-indigo-600' : 'text-gray-400'
-                              }`} 
+                            <Lock
+                                className={`h-5 w-5 transition-colors duration-200`}
                             />
                           </div>
                           <input
-                            id="password"
-                            name="password"
-                            type="password"
-                            autoComplete="new-password"
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            onFocus={() => setIsPasswordFocused(true)}
-                            onBlur={() => setIsPasswordFocused(false)}
-                            className={`appearance-none block w-full pl-10 pr-3 py-3 border ${
-                              isPasswordFocused ? 'border-indigo-600' : 'border-gray-300'
-                            } rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 sm:text-sm`}
-                            placeholder="Minimum 8 caractères"
+                              id="password"
+                              name="password"
+                              type="password"
+                              autoComplete="new-password"
+                              required
+                              className={`appearance-none block w-full pl-10 pr-3 py-3 border ${
+                                  isPasswordFocused ? 'border-indigo-600' : 'border-gray-300'
+                              } rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 sm:text-sm`}
+                              placeholder="Minimum 8 caractères"
                           />
                         </div>
                       </div>
 
                       <div>
-                        <label 
-                          htmlFor="confirm-password" 
-                          className={`block text-sm font-medium transition-colors duration-200 ${
-                            isConfirmPasswordFocused ? 'text-indigo-600' : 'text-gray-700'
-                          }`}
+                        <label
+                            htmlFor="confirm-password"
+                            className={`block text-sm font-medium transition-colors duration-200 ${
+                                isConfirmPasswordFocused ? 'text-indigo-600' : 'text-gray-700'
+                            }`}
                         >
                           Confirmer le mot de passe
                         </label>
                         <div className="mt-1 relative rounded-md shadow-sm">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Lock 
-                              className={`h-5 w-5 transition-colors duration-200 ${
-                                isConfirmPasswordFocused ? 'text-indigo-600' : 'text-gray-400'
-                              }`} 
+                            <Lock
+                                className={`h-5 w-5 transition-colors duration-200 ${
+                                    isConfirmPasswordFocused ? 'text-indigo-600' : 'text-gray-400'
+                                }`}
                             />
                           </div>
                           <input
-                            id="confirm-password"
-                            name="confirm-password"
-                            type="password"
-                            autoComplete="new-password"
-                            required
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            onFocus={() => setIsConfirmPasswordFocused(true)}
-                            onBlur={() => setIsConfirmPasswordFocused(false)}
-                            className={`appearance-none block w-full pl-10 pr-3 py-3 border ${
-                              isConfirmPasswordFocused ? 'border-indigo-600' : 'border-gray-300'
-                            } rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 sm:text-sm`}
-                            placeholder="Confirmez votre mot de passe"
+                              id="confirm-password"
+                              type="password"
+                              autoComplete="new-password"
+                              required
+                              value={confirmPassword}
+                              onChange={(e) => setConfirmPassword(e.target.value)}
+                              className={`appearance-none block w-full pl-10 pr-3 py-3 border ${
+                                  isConfirmPasswordFocused ? 'border-indigo-600' : 'border-gray-300'
+                              } rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 sm:text-sm`}
+                              placeholder="Confirmez votre mot de passe"
                           />
                         </div>
                       </div>
 
                       <div>
                         <button
-                          type="submit"
-                          disabled={loading || password !== confirmPassword}
-                          className="w-full flex justify-center items-center px-4 py-3 border border-transparent text-sm font-medium rounded-xl shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                            type="submit"
+                            disabled={loading}
+                            className="w-full flex justify-center items-center px-4 py-3 border border-transparent text-sm font-medium rounded-xl shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                         >
                           {loading ? (
-                            <div className="flex items-center">
-                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                              <span className="ml-2">Création en cours...</span>
-                            </div>
+                              <div className="flex items-center">
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                <span className="ml-2">Création en cours...</span>
+                              </div>
                           ) : (
-                            <div className="flex items-center">
-                              <span>Créer mon compte</span>
-                              <ArrowRight className="ml-2 h-4 w-4" />
-                            </div>
+                              <div className="flex items-center">
+                                <span>Créer mon compte</span>
+                                <ArrowRight className="ml-2 h-4 w-4"/>
+                              </div>
                           )}
                         </button>
                       </div>
@@ -336,35 +375,38 @@ export default function SignUp() {
 
         {/* Right side - Features */}
         {selectedType && step !== 'select-type' && (
-          <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:bg-indigo-700 lg:px-8 relative overflow-hidden">
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=2000')] bg-cover bg-center opacity-10"></div>
-            <div className="relative max-w-md mx-auto">
-              <div className="text-center">
-                <h2 className="text-3xl font-extrabold text-white">
-                  {role === 'candidate' ? 'Trouvez votre emploi idéal' : 'Recrutez les meilleurs talents'}
-                </h2>
-                <p className="mt-4 text-lg text-indigo-200">
-                  {role === 'candidate' 
-                    ? 'Accédez à des milliers d\'opportunités professionnelles'
-                    : 'Construisez une équipe performante avec les meilleurs profils'
-                  }
-                </p>
-              </div>
+            <div
+                className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:bg-indigo-700 lg:px-8 relative overflow-hidden">
+              <div
+                  className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=2000')] bg-cover bg-center opacity-10"></div>
+              <div className="relative max-w-md mx-auto">
+                <div className="text-center">
+                  <h2 className="text-3xl font-extrabold text-white">
+                    {role === 'candidate' ? 'Trouvez votre emploi idéal' : 'Recrutez les meilleurs talents'}
+                  </h2>
+                  <p className="mt-4 text-lg text-indigo-200">
+                    {role === 'candidate'
+                        ? 'Accédez à des milliers d\'opportunités professionnelles'
+                        : 'Construisez une équipe performante avec les meilleurs profils'
+                    }
+                  </p>
+                </div>
 
-              <div className="mt-12">
-                <div className="space-y-10">
-                  {selectedType.features.map((feature, index) => {
-                    const Icon = feature.icon;
-                    return (
-                      <div key={index} className="flex">
-                        <div className="flex-shrink-0">
-                          <div className="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
-                            <Icon className="h-6 w-6" />
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <h3 className="text-xl font-medium text-white">{feature.title}</h3>
-                          <p className="mt-2 text-base text-indigo-200">
+                <div className="mt-12">
+                  <div className="space-y-10">
+                    {selectedType.features.map((feature, index) => {
+                      const Icon = feature.icon;
+                      return (
+                          <div key={index} className="flex">
+                            <div className="flex-shrink-0">
+                              <div
+                                  className="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                                <Icon className="h-6 w-6"/>
+                              </div>
+                            </div>
+                            <div className="ml-4">
+                              <h3 className="text-xl font-medium text-white">{feature.title}</h3>
+                              <p className="mt-2 text-base text-indigo-200">
                             {feature.description}
                           </p>
                         </div>

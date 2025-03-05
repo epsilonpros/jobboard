@@ -1,14 +1,18 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Link } from 'react-router-dom';
+import {Link, useNavigate} from 'react-router-dom';
 import { AppDispatch, RootState } from '../../../store';
 import { fetchApplications } from '../../../store/slices/applicationsSlice';
 import { User, Calendar, CheckCircle, XCircle, Clock, Mail, Phone } from 'lucide-react';
 import type { Application } from '../../../types';
+import { ApiGeneric} from "../../../api";
+import toast from 'react-hot-toast';
 
+const api = new ApiGeneric()
 export default function CompanyApplications() {
   const dispatch = useDispatch<AppDispatch>();
   const { applications, loading } = useSelector((state: RootState) => state.applications);
+  const navigate = useNavigate()
 
   React.useEffect(() => {
     dispatch(fetchApplications());
@@ -16,6 +20,22 @@ export default function CompanyApplications() {
 
   const updateApplicationStatus = async (applicationId: string, status: Application['status']) => {
     // Implement status update logic
+      try {
+          await api.onSend(`/api/applications/${applicationId}/status`,{
+              method: "PUT",
+              data: {
+                  status
+              },
+              headers: {
+                  "Content-Type": 'application/json'
+              }
+          })
+
+          toast.success('le statut a été mis à jours avec succès !');
+          navigate(0)
+      }catch (e) {
+          toast.error('le statut n\'a pas été mis à jours !');
+      }
   };
 
   return (
@@ -47,7 +67,7 @@ export default function CompanyApplications() {
                         </div>
                         <div className="ml-4">
                           <h4 className="text-lg font-medium text-gray-900">
-                            {application.candidate?.first_name} {application.candidate?.last_name}
+                            {application.candidate?.firstName} {application.candidate?.lastName}
                           </h4>
                           <div className="mt-1 flex items-center space-x-4 text-sm text-gray-500">
                             <span className="flex items-center">
@@ -80,10 +100,10 @@ export default function CompanyApplications() {
                       <div className="text-sm text-gray-900 font-medium">
                         Candidature pour : {application.job.title}
                       </div>
-                      {application.cover_letter && (
+                      {application.coverLetter && (
                         <div className="mt-2 text-sm text-gray-700">
                           <div className="bg-gray-50 p-4 rounded-md">
-                            {application.cover_letter}
+                            {application.coverLetter}
                           </div>
                         </div>
                       )}
@@ -91,7 +111,7 @@ export default function CompanyApplications() {
                     <div className="mt-4 flex items-center justify-between text-sm">
                       <div className="flex items-center text-gray-500">
                         <Calendar className="flex-shrink-0 mr-1.5 h-5 w-5" />
-                        Reçue le {new Date(application.created_at).toLocaleDateString()}
+                        Reçue le {new Date(application.createdAt).toLocaleDateString()}
                       </div>
                       <div className="flex space-x-4">
                         <button
@@ -100,12 +120,13 @@ export default function CompanyApplications() {
                         >
                           Télécharger le CV
                         </button>
-                        <Link
-                          to={`/dashboard/messaging?candidate=${application.candidate_id}`}
-                          className="text-indigo-600 hover:text-indigo-500"
-                        >
-                          Contacter
-                        </Link>
+                        {/*<Link*/}
+                        {/*  to="#"*/}
+                        {/*  // to={`/dashboard/messaging?candidate=${application.candidate.id}`}*/}
+                        {/*  className="text-indigo-600 hover:text-indigo-500"*/}
+                        {/*>*/}
+                        {/*  Contacter*/}
+                        {/*</Link>*/}
                       </div>
                     </div>
                   </div>

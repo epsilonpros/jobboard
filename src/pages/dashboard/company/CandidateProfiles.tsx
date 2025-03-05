@@ -5,7 +5,12 @@ import { RootState } from '../../../store';
 import { supabase } from '../../../lib/supabase';
 import { User, MapPin, Briefcase, GraduationCap, Globe, Github, Linkedin, Download, Mail } from 'lucide-react';
 import type { Candidate } from '../../../types';
+import {ApiGeneric} from "../../../api";
 
+
+const api = new ApiGeneric()
+api.rowsPerPage = 12
+api.page = 3
 export default function CandidateProfiles() {
   const [candidates, setCandidates] = React.useState<Candidate[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -22,49 +27,50 @@ export default function CandidateProfiles() {
 
   const fetchCandidates = async () => {
     try {
-      let query = supabase
-        .from('candidates')
-        .select(`
-          *,
-          profiles (email),
-          experiences (
-            id,
-            company,
-            title,
-            start_date,
-            end_date,
-            current
-          ),
-          education (
-            id,
-            school,
-            degree,
-            field,
-            start_date,
-            end_date
-          ),
-          candidate_skills (
-            skill_id,
-            skills (name)
-          )
-        `);
+      const data = await api.getPaginate('/api/candidates','page')
+      // let query = supabase
+      //   .from('candidates')
+      //   .select(`
+      //     *,
+      //     profiles (email),
+      //     experiences (
+      //       id,
+      //       company,
+      //       title,
+      //       start_date,
+      //       end_date,
+      //       current
+      //     ),
+      //     education (
+      //       id,
+      //       school,
+      //       degree,
+      //       field,
+      //       start_date,
+      //       end_date
+      //     ),
+      //     candidate_skills (
+      //       skill_id,
+      //       skills (name)
+      //     )
+      //   `);
+      //
+      // if (filters.available) {
+      //   query = query.eq('available_for_hire', true);
+      // }
+      //
+      // if (filters.willing_to_relocate) {
+      //   query = query.eq('willing_to_relocate', true);
+      // }
+      //
+      // if (filters.location) {
+      //   query = query.ilike('preferred_location', `%${filters.location}%`);
+      // }
+      //
+      // const { data, error } = await query;
 
-      if (filters.available) {
-        query = query.eq('available_for_hire', true);
-      }
-
-      if (filters.willing_to_relocate) {
-        query = query.eq('willing_to_relocate', true);
-      }
-
-      if (filters.location) {
-        query = query.ilike('preferred_location', `%${filters.location}%`);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      setCandidates(data);
+      // if (error) throw error;
+      setCandidates(data.member);
     } catch (error) {
       console.error('Erreur lors du chargement des candidats:', error);
     } finally {
@@ -105,16 +111,17 @@ export default function CandidateProfiles() {
               Province
             </label>
             <select
-              value={filters.location}
-              onChange={(e) => setFilters({ ...filters, location: e.target.value })}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                value={filters.location}
+                onChange={(e) => setFilters({...filters, location: e.target.value})}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             >
               <option value="">Toutes les provinces</option>
               <option value="kinshasa">Kinshasa</option>
               <option value="lubumbashi">Lubumbashi</option>
               <option value="goma">Goma</option>
               <option value="bukavu">Bukavu</option>
-              <option value="matadi">Matadi</option>
+              <option value="likasi">Likasi</option>
+              <option value="kolwezi">Kolwezi</option>
             </select>
           </div>
 
@@ -174,7 +181,7 @@ export default function CandidateProfiles() {
                         {candidate.avatar_url ? (
                           <img
                             src={candidate.avatar_url}
-                            alt={`${candidate.first_name} ${candidate.last_name}`}
+                            alt={`${candidate.firstName} ${candidate.lastName}`}
                             className="h-12 w-12 rounded-full object-cover"
                           />
                         ) : (
@@ -183,12 +190,12 @@ export default function CandidateProfiles() {
                       </div>
                       <div className="ml-4">
                         <h3 className="text-lg font-medium text-gray-900">
-                          {candidate.first_name} {candidate.last_name}
+                          {candidate.firstName} {candidate.lastName}
                         </h3>
                         <p className="text-sm text-gray-500">{candidate.title}</p>
                       </div>
                     </div>
-                    {candidate.available_for_hire && (
+                    {candidate.availableForHire && (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                         Disponible
                       </span>
@@ -214,20 +221,20 @@ export default function CandidateProfiles() {
                     </div>
                   )}
 
-                  {candidate.preferred_location && (
+                  {candidate.preferredLocation && (
                     <div className="mt-2 flex items-center text-sm text-gray-500">
                       <MapPin className="h-4 w-4 mr-2" />
-                      <span>{candidate.preferred_location}</span>
+                      <span>{candidate.preferredLocation}</span>
                     </div>
                   )}
 
                   <div className="mt-4 flex flex-wrap gap-2">
-                    {candidate.candidate_skills?.slice(0, 3).map((skill: any) => (
+                    {candidate.candidateSkills?.slice(0, 3).map((skill: any) => (
                       <span
                         key={skill.skill_id}
                         className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
                       >
-                        {skill.skills.name}
+                        {skill.name}
                       </span>
                     ))}
                     {candidate.candidate_skills?.length > 3 && (
@@ -247,16 +254,6 @@ export default function CandidateProfiles() {
                           className="text-gray-400 hover:text-gray-500"
                         >
                           <Linkedin className="h-5 w-5" />
-                        </a>
-                      )}
-                      {candidate.github_url && (
-                        <a
-                          href={candidate.github_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-gray-400 hover:text-gray-500"
-                        >
-                          <Github className="h-5 w-5" />
                         </a>
                       )}
                       {candidate.portfolio_url && (

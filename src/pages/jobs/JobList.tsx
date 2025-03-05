@@ -85,11 +85,11 @@ export default function JobList() {
               value={filters.salary || ''}
               onChange={(e) => handleFilterChange('salary', e.target.value)}
             >
-              <option value="">Salaire (FC)</option>
-              <option value="0-500000">0 - 500 000 FC</option>
-              <option value="500000-1000000">500 000 - 1 000 000 FC</option>
-              <option value="1000000-2000000">1 000 000 - 2 000 000 FC</option>
-              <option value="2000000+">2 000 000+ FC</option>
+              <option value="">Salaire ($)</option>
+              <option value="0-500000">0 - 500 000 $</option>
+              <option value="500000-1000000">500 000 - 1 000 000 $</option>
+              <option value="1000000-2000000">1 000 000 - 2 000 000 $</option>
+              <option value="2000000+">2 000 000+ $</option>
             </select>
 
             <button
@@ -148,14 +148,14 @@ export default function JobList() {
                   </div>
                   <div className="flex items-center text-sm text-gray-500">
                     <DollarSign className="h-4 w-4 mr-2" />
-                    {formatSalary(job.salary_min, job.salary_max)}
+                    {formatSalary(job.salaryMin, job.salaryMax)}
                   </div>
                 </div>
 
                 <div className="mt-4 flex items-center justify-between">
                   <div className="flex items-center text-sm text-gray-500">
                     <Clock className="h-4 w-4 mr-2" />
-                    Publié le {new Date(job.created_at).toLocaleDateString('fr-FR')}
+                    Publié le {new Date(job.createdAt).toLocaleDateString('fr-FR')}
                   </div>
                   <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     Voir l'offre

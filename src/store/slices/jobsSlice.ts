@@ -1,7 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { supabase } from '../../lib/supabase';
-import type { Job } from '../../types';
+import type {Company, Job} from '../../types';
 import toast from 'react-hot-toast';
+import {ApiGeneric} from "../../api";
+import { RootState } from '../index';
 
 interface JobsState {
   jobs: Job[];
@@ -25,49 +27,52 @@ const initialState: JobsState = {
   filters: {},
 };
 
+const api = new ApiGeneric()
+
 export const fetchJobs = createAsyncThunk(
   'jobs/fetchJobs',
   async (filters: JobsState['filters'], { rejectWithValue }) => {
     try {
-      let query = supabase
-        .from('jobs')
-        .select(`
-          *,
-          company:companies(name, logo_url)
-        `)
-        .eq('status', 'published')
-        .order('featured', { ascending: false })
-        .order('created_at', { ascending: false });
+      // let query = supabase
+      //   .from('jobs')
+      //   .select(`
+      //     *,
+      //     company:companies(name, logo_url)
+      //   `)
+      //   .eq('status', 'published')
+      //   .order('featured', { ascending: false })
+      //   .order('created_at', { ascending: false });
+      //
+      // if (filters.search) {
+      //   query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+      // }
+      //
+      // if (filters.type) {
+      //   query = query.eq('type', filters.type);
+      // }
+      //
+      // if (filters.location) {
+      //   query = query.eq('location', filters.location);
+      // }
+      //
+      // if (filters.remote) {
+      //   query = query.eq('remote', true);
+      // }
+      //
+      // if (filters.salary) {
+      //   const [min, max] = filters.salary.split('-').map(Number);
+      //   if (max) {
+      //     query = query.and(`salary_min.gte.${min},salary_min.lte.${max}`);
+      //   } else {
+      //     query = query.gte('salary_min', min);
+      //   }
+      // }
 
-      if (filters.search) {
-        query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
-      }
+      const data = await api.onSend('/api/jobs?status=published')
+      // const { data, error } = await query;
 
-      if (filters.type) {
-        query = query.eq('type', filters.type);
-      }
-
-      if (filters.location) {
-        query = query.eq('location', filters.location);
-      }
-
-      if (filters.remote) {
-        query = query.eq('remote', true);
-      }
-
-      if (filters.salary) {
-        const [min, max] = filters.salary.split('-').map(Number);
-        if (max) {
-          query = query.and(`salary_min.gte.${min},salary_min.lte.${max}`);
-        } else {
-          query = query.gte('salary_min', min);
-        }
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return data;
+      // if (error) throw error;
+      return data.member;
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
@@ -76,28 +81,21 @@ export const fetchJobs = createAsyncThunk(
 
 export const fetchCompanyJobs = createAsyncThunk(
   'jobs/fetchCompanyJobs',
-  async (_, { rejectWithValue }) => {
+  async (_, { getState,rejectWithValue }) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No user found');
+      const state = getState() as RootState;
+      const campany_id = (state.auth.user as Company).company
+      if (!campany_id) throw new Error('No user found');
 
-      const { data, error } = await supabase
-        .from('jobs')
-        .select(`
-          *,
-          applications_count,
-          views,
-          company:companies(
-            id,
-            name,
-            logo_url
-          )
-        `)
-        .eq('company_id', user.id)
-        .order('created_at', { ascending: false });
+      const data = await api.onSend('/api/jobs', {
+        method: 'GET',
+        params: {
+          company: campany_id
+        }
+      })
 
-      if (error) throw error;
-      return data;
+      // if (error) throw error;
+      return data.member;
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
@@ -108,31 +106,12 @@ export const fetchJobDetails = createAsyncThunk(
   'jobs/fetchJobDetails',
   async (jobId: string, { rejectWithValue }) => {
     try {
-      const { data, error } = await supabase
-        .from('jobs')
-        .select(`
-          *,
-          company:companies(
-            id,
-            name,
-            logo_url,
-            description,
-            website,
-            location,
-            size,
-            industry
-          )
-        `)
-        .eq('id', jobId)
-        .single();
-
-      if (error) throw error;
-
+      const data = await api.onSend(`/api/jobs/${jobId}`)
       // Increment view count
-      await supabase
-        .from('jobs')
-        .update({ views: (data.views || 0) + 1 })
-        .eq('id', jobId);
+      // await supabase
+      //   .from('jobs')
+      //   .update({ views: (data.views || 0) + 1 })
+      //   .eq('id', jobId);
 
       return data;
     } catch (error: any) {
@@ -145,13 +124,13 @@ export const createJob = createAsyncThunk(
   'jobs/createJob',
   async (job: Partial<Job>, { rejectWithValue }) => {
     try {
-      const { data, error } = await supabase
-        .from('jobs')
-        .insert([job])
-        .select()
-        .single();
-
-      if (error) throw error;
+      const data = await api.onSend('/api/jobs', {
+        method: 'POST',
+        data: job,
+        headers: {
+            'Content-Type': 'application/ld+json'
+        }
+      })
       return data;
     } catch (error: any) {
       return rejectWithValue(error.message);

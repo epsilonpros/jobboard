@@ -8,9 +8,7 @@ import JobManagement from './JobManagement';
 import CandidateApplications from './candidate/Applications';
 import CompanyApplications from './company/Applications';
 import CandidateProfiles from './company/CandidateProfiles';
-import CompanyList from './candidate/CompanyList';
 import Settings from './Settings';
-import Messaging from '../messaging/Messaging';
 
 export default function Dashboard() {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -30,7 +28,6 @@ export default function Dashboard() {
           ) : (
             <>
               <Route path="applications" element={<CandidateApplications />} />
-              <Route path="companies" element={<CompanyList />} />
             </>
           )}
           <Route path="settings" element={<Settings />} />

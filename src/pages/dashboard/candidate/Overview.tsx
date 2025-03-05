@@ -5,10 +5,10 @@ import { Briefcase, Users, TrendingUp, Clock } from 'lucide-react';
 
 export default function CandidateOverview() {
   const stats = [
-    { name: 'Candidatures', value: '8', icon: Briefcase, change: '+2', changeType: 'increase' },
-    { name: 'Entretiens', value: '3', icon: Users, change: '+1', changeType: 'increase' },
-    { name: 'Vues du profil', value: '124', icon: TrendingUp, change: '+12%', changeType: 'increase' },
-    { name: 'Offres sauvegardées', value: '15', icon: Clock, change: '+3', changeType: 'increase' },
+    { name: 'Candidatures', value: '8', icon: Briefcase },
+    { name: 'Entretiens', value: '3', icon: Users },
+    { name: 'Vues du profil', value: '124', icon: TrendingUp},
+    { name: 'Offres vues', value: '15', icon: Clock },
   ];
 
   const recentActivity = [
@@ -53,11 +53,6 @@ export default function CandidateOverview() {
                       <dt className="text-sm font-medium text-gray-500 truncate">{stat.name}</dt>
                       <dd className="flex items-baseline">
                         <div className="text-2xl font-semibold text-gray-900">{stat.value}</div>
-                        <div className={`ml-2 flex items-baseline text-sm font-semibold ${
-                          stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {stat.change}
-                        </div>
                       </dd>
                     </dl>
                   </div>
@@ -108,29 +103,29 @@ export default function CandidateOverview() {
       </div>
 
       {/* Recommended Jobs */}
-      <div className="mt-8">
-        <h2 className="text-lg font-medium text-gray-900">Offres recommandées</h2>
-        <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((job) => (
-            <div key={job} className="bg-white shadow rounded-lg p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
-                    <Briefcase className="h-6 w-6 text-gray-600" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-sm font-medium text-gray-900">Senior Developer</h3>
-                    <p className="text-sm text-gray-500">Tech Corp</p>
-                  </div>
-                </div>
-                <button className="text-indigo-600 hover:text-indigo-500 text-sm font-medium">
-                  Voir l'offre
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/*<div className="mt-8">*/}
+      {/*  <h2 className="text-lg font-medium text-gray-900">Offres recommandées</h2>*/}
+      {/*  <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">*/}
+      {/*    {[1, 2, 3].map((job) => (*/}
+      {/*      <div key={job} className="bg-white shadow rounded-lg p-6">*/}
+      {/*        <div className="flex items-center justify-between">*/}
+      {/*          <div className="flex items-center">*/}
+      {/*            <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">*/}
+      {/*              <Briefcase className="h-6 w-6 text-gray-600" />*/}
+      {/*            </div>*/}
+      {/*            <div className="ml-4">*/}
+      {/*              <h3 className="text-sm font-medium text-gray-900">Senior Developer</h3>*/}
+      {/*              <p className="text-sm text-gray-500">Tech Corp</p>*/}
+      {/*            </div>*/}
+      {/*          </div>*/}
+      {/*          <button className="text-indigo-600 hover:text-indigo-500 text-sm font-medium">*/}
+      {/*            Voir l'offre*/}
+      {/*          </button>*/}
+      {/*        </div>*/}
+      {/*      </div>*/}
+      {/*    ))}*/}
+      {/*  </div>*/}
+      {/*</div>*/}
     </div>
   );
 }

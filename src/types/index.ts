@@ -8,6 +8,7 @@ export interface User {
 }
 
 export interface Company extends User {
+  company?: number
   name: string;
   description: string;
   logo_url?: string;
@@ -16,8 +17,8 @@ export interface Company extends User {
 }
 
 export interface Candidate extends User {
-  first_name: string;
-  last_name: string;
+  firstName: string;
+  lastName: string;
   title: string;
   bio: string;
   avatar_url?: string;
@@ -49,19 +50,20 @@ export interface Education {
 }
 
 export interface Job {
-  id: string;
-  company_id?: string;
+  id?: string;
+  company?: string;
   title: string;
   description: string;
   requirements: string[];
   type: 'full-time' | 'part-time' | 'contract' | 'internship';
   location: string;
   remote: boolean;
-  salary_min?: number;
-  salary_max?: number;
-  created_at: string;
-  expires_at: string;
+  salaryMin?: number|string;
+  salaryMax?: number|string;
+  createdAt?: string;
+  expiresAt: string;
   status: 'draft' | 'published' | 'closed';
+  featured?: boolean;
 }
 
 export interface Application {

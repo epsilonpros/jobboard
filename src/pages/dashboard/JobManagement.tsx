@@ -31,7 +31,7 @@ export default function JobManagement() {
   };
 
   const filteredJobs = React.useMemo(() => {
-    return jobs.filter(job => {
+    return jobs?.filter(job => {
       const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         job.description.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'all' || job.status === statusFilter;
@@ -117,7 +117,7 @@ export default function JobManagement() {
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
         </div>
-      ) : filteredJobs.length === 0 ? (
+      ) : filteredJobs?.length === 0 ? (
         <div className="text-center bg-white py-12 px-4 shadow rounded-lg">
           <h3 className="mt-2 text-sm font-medium text-gray-900">Aucun emploi trouvé</h3>
           <p className="mt-1 text-sm text-gray-500">Commencez par créer une nouvelle offre d’emploi.</p>
@@ -158,7 +158,7 @@ export default function JobManagement() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredJobs.map((job: Job) => (
+                {filteredJobs?.map((job: Job) => (
                   <tr key={job.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <div className="flex items-center">
@@ -170,7 +170,7 @@ export default function JobManagement() {
                           </div>
                           <div className="flex items-center text-sm text-gray-500 mt-1">
                             <DollarSign className="h-4 w-4 mr-1" />
-                            {formatSalary(job.salary_min, job.salary_max)}
+                            {formatSalary(job.salaryMin, job.salaryMax)}
                           </div>
                         </div>
                       </div>
@@ -185,7 +185,7 @@ export default function JobManagement() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center text-sm text-gray-500">
                         <Users className="h-4 w-4 mr-1" />
-                        {job.applications_count || 0}
+                        {job.applicationsCount || 0}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -198,11 +198,11 @@ export default function JobManagement() {
                       <div className="text-sm text-gray-500">
                         <div className="flex items-center">
                           <Calendar className="h-4 w-4 mr-1" />
-                          Posted: {new Date(job.created_at).toLocaleDateString()}
+                          Posted: {new Date(job.createdAt).toLocaleDateString()}
                         </div>
                         <div className="flex items-center mt-1">
                           <Calendar className="h-4 w-4 mr-1" />
-                          Expires: {new Date(job.expires_at).toLocaleDateString()}
+                          Expires: {new Date(job.expiresAt).toLocaleDateString()}
                         </div>
                       </div>
                     </td>

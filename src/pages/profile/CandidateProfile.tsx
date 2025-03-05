@@ -1,13 +1,13 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
-import { updateCandidateProfile } from '../../store/slices/profileSlice';
+import {fetchProfile, updateCandidateProfile} from '../../store/slices/profileSlice';
 import { Briefcase, GraduationCap, Award, MapPin, Mail, Globe, Github, Linkedin } from 'lucide-react';
 
 export default function CandidateProfile() {
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { loading } = useSelector((state: RootState) => state.profile);
+  const { loading,data } = useSelector((state: RootState) => state.profile);
 
   const [experiences, setExperiences] = React.useState([
     { id: '', company: '', title: '', startDate: '', endDate: '', current: false, description: '' }
@@ -17,11 +17,11 @@ export default function CandidateProfile() {
     { id: '', school: '', degree: '', field: '', startDate: '', endDate: '' }
   ]);
 
-  const [skills, setSkills] = React.useState(['']);
+  const [skills, setSkills] = React.useState([{id: '', name: ''}]);
 
   const [formData, setFormData] = React.useState({
-    first_name: '',
-    last_name: '',
+    firstName: '',
+    lastName: '',
     title: '',
     bio: '',
     location: '',
@@ -31,6 +31,17 @@ export default function CandidateProfile() {
     available_for_hire: true,
     willing_to_relocate: false,
   });
+
+  useEffect(() => {
+    dispatch(fetchProfile())
+  }, []);
+
+  useEffect(() => {
+    setFormData(data);
+    setExperiences(data?.experiences ?? [{ id: '', school: '', degree: '', field: '', startDate: '', endDate: '' }])
+    setEducation(data?.education ?? [{ id: '', school: '', degree: '', field: '', startDate: '', endDate: '' }])
+    setSkills(data?.skills ?? [{id: '', name: ''}])
+  }, [data]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +68,7 @@ export default function CandidateProfile() {
   };
 
   const addSkill = () => {
-    setSkills([...skills, '']);
+    setSkills([...skills, {id: '', name: ''}]);
   };
 
   return (
@@ -76,8 +87,8 @@ export default function CandidateProfile() {
                   type="text"
                   name="first_name"
                   id="first_name"
-                  value={formData.first_name}
-                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                  value={formData?.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 />
               </div>
@@ -90,8 +101,8 @@ export default function CandidateProfile() {
                   type="text"
                   name="last_name"
                   id="last_name"
-                  value={formData.last_name}
-                  onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                  value={formData?.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 />
               </div>
@@ -104,7 +115,7 @@ export default function CandidateProfile() {
                   type="text"
                   name="title"
                   id="title"
-                  value={formData.title}
+                  value={formData?.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   placeholder="e.g., Senior Software Engineer"
@@ -119,7 +130,7 @@ export default function CandidateProfile() {
                   id="bio"
                   name="bio"
                   rows={4}
-                  value={formData.bio}
+                  value={formData?.bio}
                   onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 />
@@ -354,10 +365,10 @@ export default function CandidateProfile() {
                 <div key={index}>
                   <input
                     type="text"
-                    value={skill}
+                    value={skill.name}
                     onChange={(e) => {
                       const newSkills = [...skills];
-                      newSkills[index] = e.target.value;
+                      newSkills[index].name = e.target.value;
                       setSkills(newSkills);
                     }}
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
@@ -386,27 +397,8 @@ export default function CandidateProfile() {
                     type="url"
                     name="portfolio_url"
                     id="portfolio_url"
-                    value={formData.portfolio_url}
-                    onChange={(e) => setFormData({ ...formData, portfolio_url: e.target.value })}
-                    className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
-                  />
-                </div>
-              </div>
-
-              <div className="sm:col-span-3">
-                <label htmlFor="github_url" className="block text-sm font-medium text-gray-700">
-                  GitHub URL
-                </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Github className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    type="url"
-                    name="github_url"
-                    id="github_url"
-                    value={formData.github_url}
-                    onChange={(e) => setFormData({ ...formData, github_url: e.target.value })}
+                    value={formData?.portfolioUrl}
+                    onChange={(e) => setFormData({ ...formData, portfolioUrl: e.target.value })}
                     className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
                   />
                 </div>
@@ -424,8 +416,8 @@ export default function CandidateProfile() {
                     type="url"
                     name="linkedin_url"
                     id="linkedin_url"
-                    value={formData.linkedin_url}
-                    onChange={(e) => setFormData({ ...formData, linkedin_url: e.target.value })}
+                    value={formData?.linkedinUrl}
+                    onChange={(e) => setFormData({ ...formData, linkedinUrl: e.target.value })}
                     className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
                   />
                 </div>
@@ -438,8 +430,8 @@ export default function CandidateProfile() {
                       id="available_for_hire"
                       name="available_for_hire"
                       type="checkbox"
-                      checked={formData.available_for_hire}
-                      onChange={(e) => setFormData({ ...formData, available_for_hire: e.target.checked })}
+                      checked={formData?.availableForHire}
+                      onChange={(e) => setFormData({ ...formData, availableForHire: e.target.checked })}
                       className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
                     />
                   </div>
@@ -459,8 +451,8 @@ export default function CandidateProfile() {
                       id="willing_to_relocate"
                       name="willing_to_relocate"
                       type="checkbox"
-                      checked={formData.willing_to_relocate}
-                      onChange={(e) => setFormData({ ...formData, willing_to_relocate: e.target.checked })}
+                      checked={formData?.willingToRelocate}
+                      onChange={(e) => setFormData({ ...formData, willingToRelocate: e.target.checked })}
                       className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
                     />
                   </div>

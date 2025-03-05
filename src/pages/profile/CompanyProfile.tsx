@@ -1,28 +1,21 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
-import { updateCompanyProfile } from '../../store/slices/profileSlice';
+import {fetchProfile, updateCompanyProfile} from '../../store/slices/profileSlice';
 import { Building2, MapPin, Globe, Users, Briefcase } from 'lucide-react';
 
 export default function CompanyProfile() {
   const dispatch = useDispatch<AppDispatch>();
-  const { user } = useSelector((state: RootState) => state.auth);
-  const { loading } = useSelector((state: RootState) => state.profile);
+  const { loading ,data} = useSelector((state: RootState) => state.profile);
+  const [formData, setFormData] = React.useState(data);
 
-  const [formData, setFormData] = React.useState({
-    name: '',
-    description: '',
-    industry: '',
-    size: '',
-    website: '',
-    location: '',
-    logo_url: '',
-    // social_media: {
-    //   linkedin: '',
-    //   twitter: '',
-    //   facebook: '',
-    // },
-  });
+  useEffect(() => {
+    dispatch(fetchProfile())
+  }, []);
+
+  useEffect(() => {
+    setFormData(data);
+  }, [data]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,9 +43,9 @@ export default function CompanyProfile() {
                 <label className="block text-sm font-medium text-gray-700">Company Logo</label>
                 <div className="mt-1 flex items-center">
                   <div className="h-32 w-32 rounded-lg overflow-hidden bg-gray-100">
-                    {formData.logo_url ? (
+                    {formData?.logo_url ? (
                       <img
-                        src={formData.logo_url}
+                        src={formData?.logo_url}
                         alt="Company logo"
                         className="h-full w-full object-cover"
                       />
@@ -87,7 +80,7 @@ export default function CompanyProfile() {
                   type="text"
                   name="name"
                   id="name"
-                  value={formData.name}
+                  value={formData?.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 />
@@ -100,7 +93,7 @@ export default function CompanyProfile() {
                 <select
                   id="industry"
                   name="industry"
-                  value={formData.industry}
+                  value={formData?.industry}
                   onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
                   className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
                 >
@@ -122,7 +115,7 @@ export default function CompanyProfile() {
                 <select
                   id="size"
                   name="size"
-                  value={formData.size}
+                  value={formData?.size}
                   onChange={(e) => setFormData({ ...formData, size: e.target.value })}
                   className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
                 >
@@ -144,7 +137,7 @@ export default function CompanyProfile() {
                   id="description"
                   name="description"
                   rows={4}
-                  value={formData.description}
+                  value={formData?.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 />
@@ -162,7 +155,7 @@ export default function CompanyProfile() {
                     type="url"
                     name="website"
                     id="website"
-                    value={formData.website}
+                    value={formData?.website}
                     onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                     className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
                   />
@@ -181,7 +174,7 @@ export default function CompanyProfile() {
                     type="text"
                     name="location"
                     id="location"
-                    value={formData.location}
+                    value={formData?.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                     className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
                   />

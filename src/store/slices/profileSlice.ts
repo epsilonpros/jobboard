@@ -2,6 +2,8 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import type { Candidate, Company } from '../../types';
+import {RootState} from "../index.ts";
+import {ApiGeneric} from "../../api";
 
 interface ProfileState {
   loading: boolean;
@@ -15,47 +17,22 @@ const initialState: ProfileState = {
   data: null,
 };
 
+const api = new ApiGeneric()
 export const fetchProfile = createAsyncThunk(
   'profile/fetchProfile',
-  async (_, { rejectWithValue }) => {
+  async (_, {getState, rejectWithValue }) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const state = getState() as RootState;
+      const user = state.auth.user
       if (!user) throw new Error('No user found');
 
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      if (user.role === 'candidate') {
+        const candidate = await api.onSend('/api/candidates/'+user.id)
 
-      if (error) throw error;
-
-      if (profile.role === 'candidate') {
-        const { data: candidate, error: candidateError } = await supabase
-          .from('candidates')
-          .select(`
-            *,
-            experiences (*),
-            education (*),
-            candidate_skills (
-              skill_id,
-              years_of_experience,
-              skills (name, category)
-            )
-          `)
-          .eq('id', user.id)
-          .single();
-
-        if (candidateError) throw candidateError;
         return candidate;
       } else {
-        const { data: company, error: companyError } = await supabase
-          .from('companies')
-          .select('*')
-          .eq('id', user.id)
-          .single();
+        const company = await api.onSend(`/api/companies/${(user as Company).company}`)
 
-        if (companyError) throw companyError;
         return company;
       }
     } catch (error: any) {
@@ -135,17 +112,20 @@ export const updateCandidateProfile = createAsyncThunk(
 
 export const updateCompanyProfile = createAsyncThunk(
   'profile/updateCompanyProfile',
-  async (profile: Partial<Company>, { rejectWithValue }) => {
+  async (profile: Partial<Company>, { getState, rejectWithValue }) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const state = getState() as RootState;
+      const user = state.auth.user
       if (!user) throw new Error('No user found');
 
-      const { error } = await supabase
-        .from('companies')
-        .update(profile)
-        .eq('id', user.id);
+      await api.onSend(`/api/companies/${(user as Company).company}`,{
+        method: 'PATCH',
+        data:profile,
+        headers: {
+          "Content-Type": 'application/merge-patch+json'
+        }
+      })
 
-      if (error) throw error;
       return profile;
     } catch (error: any) {
       return rejectWithValue(error.message);

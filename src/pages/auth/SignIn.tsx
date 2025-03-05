@@ -19,16 +19,17 @@ export default function SignIn() {
     try {
       const result = await dispatch(signIn({ email, password })).unwrap();
       if (result) {
+        // @ts-ignore
+        sessionStorage.setItem("tia-wfs-token", result.token);
         if (result.role === 'company') {
-          navigate('/dashboard/jobs');
+          window.location.replace('/dashboard/jobs');
         } else if (result.role === 'candidate') {
-          navigate('/dashboard/applications');
+          window.location.replace('/dashboard/applications');
         } else {
-          navigate('/dashboard');
+          window.location.replace('/dashboard');
         }
       }
     } catch (error) {
-      console.error('Échec de la connexion:', error);
     }
   };
 
@@ -52,7 +53,7 @@ export default function SignIn() {
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-indigo-600 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-sm transition-colors"
         >
           <Home className="h-4 w-4 mr-2" />
-          Retour à l'accueil
+          Accueil
         </Link>
       </div>
 
@@ -75,23 +76,6 @@ export default function SignIn() {
             <div className="mt-8">
               <div className="bg-white py-8 px-4 shadow-2xl sm:rounded-2xl sm:px-10">
                 <form className="space-y-6" onSubmit={handleSubmit}>
-                  {error && (
-                    <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-md" role="alert">
-                      <div className="flex">
-                        <div className="flex-shrink-0">
-                          <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                        <div className="ml-3">
-                          <p className="text-sm text-red-700">
-                            {getErrorMessage(error)}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                   <div>
                     <label 
                       htmlFor="email" 
