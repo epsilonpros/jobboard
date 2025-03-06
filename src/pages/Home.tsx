@@ -1,11 +1,50 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Briefcase, Users, Building2, TrendingUp, Globe, Shield, Zap, ChevronRight, MapPin, ArrowRight } from 'lucide-react';
+import { ApiGeneric } from "../api";
+import type { Company, Job } from '../types';
+
+const api = new ApiGeneric();
 
 export default function Home() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = React.useState('');
   const [selectedCategory, setSelectedCategory] = React.useState('all');
+  const [featuredCompanies, setFeaturedCompanies] = React.useState<Company[]>([]);
+  const [featuredJobs, setFeaturedJobs] = React.useState<Job[]>([]);
+  const [loadingCompanies, setLoadingCompanies] = React.useState(true);
+  const [loadingJobs, setLoadingJobs] = React.useState(true);
+
+  React.useEffect(() => {
+    fetchFeaturedCompanies();
+    fetchFeaturedJobs();
+  }, []);
+
+  const fetchFeaturedCompanies = async () => {
+    try {
+      api.rowsPerPage = 3; // Limit to 3 featured companies
+      api.page = 1;
+      const data = await api.onSend('/api/companies?verified=true');
+      setFeaturedCompanies(data.member);
+    } catch (error) {
+      console.error('Error fetching featured companies:', error);
+    } finally {
+      setLoadingCompanies(false);
+    }
+  };
+
+  const fetchFeaturedJobs = async () => {
+    try {
+      api.rowsPerPage = 3; // Limit to 3 featured jobs
+      api.page = 1;
+      const data = await api.onSend('/api/jobs?featured=true&status=published');
+      setFeaturedJobs(data.member);
+    } catch (error) {
+      console.error('Error fetching featured jobs:', error);
+    } finally {
+      setLoadingJobs(false);
+    }
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +112,7 @@ export default function Home() {
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   <span className="text-gray-400 text-sm">Recherches populaires:</span>
-                  {['Développeur', 'Marketing', 'Design', 'Commercial'].map((term) => (
+                  {['Manager', 'Marketing', 'Design', 'Commercial'].map((term) => (
                     <button
                       key={term}
                       onClick={() => handlePopularSearch(term)}
@@ -107,36 +146,55 @@ export default function Home() {
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
                 <h3 className="text-xl font-semibold text-white mb-4">Offres en Vedette</h3>
                 <div className="space-y-4">
-                  {[
-                    { id: '1', title: 'Senior Developer', company: 'Tech Corp', location: 'Paris' },
-                    { id: '2', title: 'Product Manager', company: 'Innovate Inc', location: 'Lyon' },
-                    { id: '3', title: 'UX Designer', company: 'Future Labs', location: 'Bordeaux' },
-                  ].map((job) => (
-                    <Link
-                      key={job.id}
-                      to={`/jobs/${job.id}`}
-                      className="block bg-white/5 hover:bg-white/10 rounded-xl p-4 transition-colors"
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="h-12 w-12 rounded-lg bg-indigo-500/20 flex items-center justify-center">
-                          <Briefcase className="h-6 w-6 text-indigo-300" />
-                        </div>
-                        <div>
-                          <h4 className="text-white font-medium">{job.title}</h4>
-                          <div className="flex items-center gap-4 mt-1 text-sm text-gray-300">
-                            <span className="flex items-center">
-                              <Building2 className="h-4 w-4 mr-1" />
-                              {job.company}
-                            </span>
-                            <span className="flex items-center">
-                              <MapPin className="h-4 w-4 mr-1" />
-                              {job.location}
-                            </span>
+                  {loadingJobs ? (
+                    // Loading skeleton
+                    Array.from({ length: 3 }).map((_, index) => (
+                      <div key={index} className="bg-white/5 rounded-xl p-4">
+                        <div className="flex items-start gap-4">
+                          <div className="h-12 w-12 rounded-lg bg-white/10 animate-pulse"></div>
+                          <div className="flex-1">
+                            <div className="h-5 bg-white/10 rounded w-3/4 animate-pulse"></div>
+                            <div className="mt-2 flex items-center gap-4">
+                              <div className="h-4 bg-white/10 rounded w-1/3 animate-pulse"></div>
+                              <div className="h-4 bg-white/10 rounded w-1/3 animate-pulse"></div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </Link>
-                  ))}
+                    ))
+                  ) : featuredJobs?.length > 0 ? (
+                    featuredJobs.map((job) => (
+                      <Link
+                        key={job.id}
+                        to={`/jobs/${job.id}`}
+                        className="block bg-white/5 hover:bg-white/10 rounded-xl p-4 transition-colors"
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className="h-12 w-12 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+                            <Briefcase className="h-6 w-6 text-indigo-300" />
+                          </div>
+                          <div>
+                            <h4 className="text-white font-medium">{job.title}</h4>
+                            <div className="flex items-center gap-4 mt-1 text-sm text-gray-300">
+                              <span className="flex items-center">
+                                <Building2 className="h-4 w-4 mr-1" />
+                                {job.company?.name}
+                              </span>
+                              <span className="flex items-center">
+                                <MapPin className="h-4 w-4 mr-1" />
+                                {job.location} {job.remote && '(Télétravail)'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="text-center py-6 text-gray-300">
+                      <Briefcase className="mx-auto h-8 w-8 mb-2 opacity-50" />
+                      <p>Aucune offre en vedette pour le moment</p>
+                    </div>
+                  )}
                 </div>
                 <Link
                   to="/jobs"
@@ -204,106 +262,96 @@ export default function Home() {
           </div>
 
           <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                id: '1',
-                name: 'Tech Corp',
-                logo: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=100&h=100&fit=crop',
-                jobs: 12,
-                description: 'Leader dans le développement de solutions innovantes',
-                industry: 'Technologie',
-                location: 'Paris, France',
-                benefits: ['Télétravail flexible', 'Formation continue', 'RTT'],
-              },
-              {
-                id: '2',
-                name: 'Innovate Inc',
-                logo: 'https://images.unsplash.com/photo-1549421263-5ec394a5ad4c?w=100&h=100&fit=crop',
-                jobs: 8,
-                description: 'Startup en pleine croissance spécialisée en IA',
-                industry: 'Intelligence Artificielle',
-                location: 'Lyon, France',
-                benefits: ['Stock-options', 'Horaires flexibles', 'Événements d\'équipe'],
-              },
-              {
-                id: '3',
-                name: 'Future Labs',
-                logo: 'https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?w=100&h=100&fit=crop',
-                jobs: 15,
-                description: 'Pionnier dans la recherche et développement durable',
-                industry: 'Recherche & Développement',
-                location: 'Bordeaux, France',
-                benefits: ['Prime annuelle', 'Mutuelle familiale', 'Formation à l\'étranger'],
-              },
-            ].map((company) => (
-              <div 
-                key={company.id} 
-                className="group bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
-              >
-                <div className="relative h-48 w-full bg-indigo-600">
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-indigo-700 opacity-90"></div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <img
-                      src={company.logo}
-                      alt={company.name}
-                      className="h-24 w-24 rounded-lg object-cover border-4 border-white shadow-lg"
-                    />
+            {loadingCompanies ? (
+              // Loading skeleton
+              Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="bg-white rounded-xl shadow-sm p-6 animate-pulse">
+                  <div className="h-48 bg-gray-200 rounded-lg mb-6"></div>
+                  <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-gray-200 rounded"></div>
+                    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
                   </div>
                 </div>
-
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-semibold text-gray-900">{company.name}</h3>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                      {company.jobs} postes
-                    </span>
+              ))
+            ) : featuredCompanies?.length > 0 ? (
+              featuredCompanies.map((company) => (
+                <div 
+                  key={company.id} 
+                  className="group bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+                >
+                  <div className="relative h-48 w-full bg-indigo-600">
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-indigo-700 opacity-90"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      {company.logo_url ? (
+                        <img
+                          src={company.logo_url}
+                          alt={company.name}
+                          className="h-24 w-24 rounded-lg object-cover border-4 border-white shadow-lg"
+                        />
+                      ) : (
+                        <div className="h-24 w-24 rounded-lg bg-white flex items-center justify-center border-4 border-white shadow-lg">
+                          <Building2 className="h-12 w-12 text-indigo-600" />
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  <p className="text-gray-600 mb-4">{company.description}</p>
-
-                  <div className="space-y-3">
-                    <div className="flex items-center text-sm text-gray-500">
-                      <Building2 className="h-4 w-4 mr-2" />
-                      {company.industry}
-                    </div>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <MapPin className="h-4 w-4 mr-2" />
-                      {company.location}
-                    </div>
-                  </div>
-
-                  <div className="mt-4">
-                    <h4 className="text-sm font-medium text-gray-900 mb-2">Avantages clés :</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {company.benefits.map((benefit) => (
-                        <span
-                          key={benefit}
-                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                        >
-                          {benefit}
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-semibold text-gray-900">{company.name}</h3>
+                      {company.verified && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                          Vérifié
                         </span>
-                      ))}
+                      )}
+                    </div>
+
+                    <p className="text-gray-600 mb-4">{company.description}</p>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center text-sm text-gray-500">
+                        <Building2 className="h-4 w-4 mr-2" />
+                        {company.industry || 'Secteur non spécifié'}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <MapPin className="h-4 w-4 mr-2" />
+                        {company.location || 'Localisation non spécifiée'}
+                      </div>
+                    </div>
+
+                    <div className="mt-6 flex items-center justify-between">
+                      {company.website && (
+                        <a
+                          href={company.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center text-indigo-600 hover:text-indigo-500"
+                        >
+                          <Globe className="h-4 w-4 mr-2" />
+                          Site web
+                        </a>
+                      )}
+                      <Link
+                        to={`/companies/${company.id}`}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+                      >
+                        Voir le profil
+                      </Link>
                     </div>
                   </div>
-
-                  <div className="mt-6 flex items-center justify-between">
-                    <Link
-                      to={`/companies/${company.id}`}
-                      className="inline-flex items-center text-indigo-600 hover:text-indigo-500"
-                    >
-                      Voir le profil
-                      <ChevronRight className="ml-2 h-4 w-4" />
-                    </Link>
-                    <Link
-                      to={`/companies/${company.id}/jobs`}
-                      className="inline-flex items-center px-3 py-1.5 border border-indigo-600 text-sm font-medium rounded-md text-indigo-600 hover:bg-indigo-50"
-                    >
-                      Voir les offres
-                    </Link>
-                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="col-span-3 text-center py-12">
+                <Building2 className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">Aucune entreprise en vedette</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Revenez plus tard pour découvrir nos entreprises partenaires.
+                </p>
               </div>
-            ))}
+            )}
           </div>
 
           <div className="mt-12 text-center">

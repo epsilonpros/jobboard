@@ -1,54 +1,49 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { supabase } from '../../lib/supabase';
-import type {Application, Company} from '../../types';
+import type { Application, Company } from '../../types';
 import toast from 'react-hot-toast';
-import {ApiGeneric} from "../../api";
-import {RootState} from "../index.ts";
+import { ApiGeneric } from "../../api";
+import { RootState } from "../index.ts";
 
 interface ApplicationsState {
   applications: Application[];
   loading: boolean;
   error: string | null;
+  hasMore: boolean;
 }
 
 const initialState: ApplicationsState = {
   applications: [],
   loading: false,
   error: null,
+  hasMore: true,
 };
 
-const api = new ApiGeneric()
+const api = new ApiGeneric();
 
 export const fetchApplications = createAsyncThunk(
   'applications/fetchApplications',
-  async (_, { getState, rejectWithValue }) => {
+  async ({ page = 1, status }: { page?: number; status?: string }, { getState, rejectWithValue }) => {
     try {
       const state = getState() as RootState;
+      api.page = page;
+      api.rowsPerPage = 12;
+
       let url = `candidate=${state.auth.user.id}`;
-      if(state.auth.user.role === 'company'){
-        const campany_id = (state.auth.user as Company).company
-        url = `job.company=${campany_id}`;
+      if (state.auth.user.role === 'company') {
+        const companyId = (state.auth.user as Company).company;
+        url = `job.company=${companyId}`;
+      }
+      if (status && status !== 'all') {
+        url += `&status=${status}`;
       }
 
-      const data = await api.onSend(`/api/applications?${url}`)
-      // const { data, error } = await supabase
-      //   .from('applications')
-      //   .select(`
-      //     *,
-      //     job:jobs(
-      //       id,
-      //       title,
-      //       company:companies(
-      //         id,
-      //         name,
-      //         logo_url
-      //       )
-      //     )
-      //   `)
-      //   .eq('candidate_id', user.id)
-      //   .order('created_at', { ascending: false });
-
-      return data.member;
+      const data = await api.onSend(`/api/applications?${url}`);
+      
+      return {
+        applications: data.member,
+        page,
+        hasMore: data.member.length === 12 // Assuming 12 is the page size
+      };
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
@@ -59,16 +54,15 @@ export const applyToJob = createAsyncThunk(
   'applications/applyToJob',
   async ({ job_id, cover_letter }: { job_id: string; cover_letter: string }, { rejectWithValue }) => {
     try {
-
-      const data = await api.onSend(`/api/jobs/${job_id}/apply`,{
+      const data = await api.onSend(`/api/jobs/${job_id}/apply`, {
         method: 'POST',
-        headers:{
-            'Content-Type': "application/json"
+        headers: {
+          'Content-Type': "application/json"
         },
-        data:{
+        data: {
           coverLetter: cover_letter,
         }
-      })
+      });
 
       return data;
     } catch (error: any) {
@@ -89,7 +83,12 @@ const applicationsSlice = createSlice({
       })
       .addCase(fetchApplications.fulfilled, (state, action) => {
         state.loading = false;
-        state.applications = action.payload;
+        if (action.payload.page === 1) {
+          state.applications = action.payload.applications;
+        } else {
+          state.applications = [...state.applications, ...action.payload.applications];
+        }
+        state.hasMore = action.payload.hasMore;
       })
       .addCase(fetchApplications.rejected, (state, action) => {
         state.loading = false;

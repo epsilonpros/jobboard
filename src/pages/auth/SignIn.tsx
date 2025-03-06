@@ -21,7 +21,11 @@ export default function SignIn() {
       if (result) {
         // @ts-ignore
         sessionStorage.setItem("tia-wfs-token", result.token);
-        if (result.role === 'company') {
+        
+        // Redirect based on user role
+        if (result.role === 'admin') {
+          window.location.replace('/admin/companies');
+        } else if (result.role === 'company') {
           window.location.replace('/dashboard/jobs');
         } else if (result.role === 'candidate') {
           window.location.replace('/dashboard/applications');
@@ -106,7 +110,7 @@ export default function SignIn() {
                         className={`appearance-none block w-full pl-10 pr-3 py-3 border ${
                           isEmailFocused ? 'border-indigo-600' : 'border-gray-300'
                         } rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 sm:text-sm`}
-                        placeholder="vous@exemple.fr"
+                        placeholder="user@grouptiajob.com"
                       />
                     </div>
                   </div>

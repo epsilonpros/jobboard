@@ -23,8 +23,10 @@ export default function SignUp() {
     if (!role || data.password !== confirmPassword) return;
     
     const result = await dispatch(signUp({ ...data, role }));
-    if (!result.error) {
-      navigate('/dashboard');
+    if (result.role === 'candidate') {
+      navigate('/verify-email?email=' + encodeURIComponent(data.email));
+    }else{
+      navigate('/sign-in')
     }
   };
 
@@ -282,7 +284,7 @@ export default function SignUp() {
                               autoComplete="email"
                               required
                               className={`appearance-none block w-full pl-10 pr-3 py-3 border focus:text-indigo-600 text-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 sm:text-sm`}
-                              placeholder="candidat@exemple.fr"
+                              placeholder="user@grouptiajob.com"
                           />
                         </div>
                       </div>

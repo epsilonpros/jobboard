@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Eye, MoreVertical, Search, Filter, Calendar, MapPin, DollarSign, Users } from 'lucide-react';
 import { AppDispatch, RootState } from '../../store';
 import { fetchCompanyJobs, deleteJob } from '../../store/slices/jobsSlice';
@@ -9,6 +9,8 @@ import toast from 'react-hot-toast';
 
 export default function JobManagement() {
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { jobs, loading } = useSelector((state: RootState) => state.jobs);
   const [selectedJob, setSelectedJob] = React.useState<string | null>(null);
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -20,7 +22,7 @@ export default function JobManagement() {
   }, [dispatch]);
 
   const handleDeleteJob = async (jobId: string) => {
-    if (window.confirm('Are you sure you want to delete this job posting? This action cannot be undone.')) {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette offre ? Cette action est irréversible.')) {
       try {
         await dispatch(deleteJob(jobId)).unwrap();
         setSelectedJob(null);
@@ -28,6 +30,10 @@ export default function JobManagement() {
         // Error is handled by the slice
       }
     }
+  };
+
+  const handleViewApplications = (jobId: string) => {
+    navigate(`/dashboard/applications?job=${jobId}`);
   };
 
   const filteredJobs = React.useMemo(() => {
@@ -52,17 +58,10 @@ export default function JobManagement() {
     }
   };
 
-  const formatSalary = (min?: number, max?: number) => {
-    if (!min && !max) return 'Not specified';
-    if (!max) return `${min.toLocaleString()}+`;
-    if (!min) return `Up to ${max.toLocaleString()}`;
-    return `${min.toLocaleString()} - ${max.toLocaleString()}`;
-  };
-
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-semibold text-gray-900">Job Management</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">Gestion des offres</h1>
         <Link
           to="/jobs/create"
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -79,7 +78,7 @@ export default function JobManagement() {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search jobs..."
+                placeholder="Rechercher une offre..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
@@ -92,7 +91,7 @@ export default function JobManagement() {
             className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
           >
             <Filter className="h-5 w-5 mr-2" />
-            Filters
+            Filtres
           </button>
         </div>
 
@@ -103,10 +102,10 @@ export default function JobManagement() {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
             >
-              <option value="all">All Status</option>
-              <option value="published">Published</option>
-              <option value="draft">Draft</option>
-              <option value="closed">Closed</option>
+              <option value="all">Tous les statuts</option>
+              <option value="published">Publiées</option>
+              <option value="draft">Brouillons</option>
+              <option value="closed">Fermées</option>
             </select>
           </div>
         )}
@@ -119,8 +118,8 @@ export default function JobManagement() {
         </div>
       ) : filteredJobs?.length === 0 ? (
         <div className="text-center bg-white py-12 px-4 shadow rounded-lg">
-          <h3 className="mt-2 text-sm font-medium text-gray-900">Aucun emploi trouvé</h3>
-          <p className="mt-1 text-sm text-gray-500">Commencez par créer une nouvelle offre d’emploi.</p>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">Aucune offre trouvée</h3>
+          <p className="mt-1 text-sm text-gray-500">Commencez par créer une nouvelle offre d'emploi.</p>
           <div className="mt-6">
             <Link
               to="/jobs/create"
@@ -132,8 +131,9 @@ export default function JobManagement() {
           </div>
         </div>
       ) : (
-        <div className="bg-white shadow rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="bg-white shadow rounded-lg">
+          <div className="">
+            {/* <div className="overflow-x-auto"> */}
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -144,7 +144,7 @@ export default function JobManagement() {
                     Statut
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Applications
+                    Candidatures
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Vues
@@ -170,7 +170,14 @@ export default function JobManagement() {
                           </div>
                           <div className="flex items-center text-sm text-gray-500 mt-1">
                             <DollarSign className="h-4 w-4 mr-1" />
-                            {formatSalary(job.salaryMin, job.salaryMax)}
+                            {job.salaryMin && job.salaryMax
+                              ? `${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()}`
+                              : job.salaryMin
+                              ? `${job.salaryMin.toLocaleString()}+`
+                              : job.salaryMax
+                              ? `Jusqu'à ${job.salaryMax.toLocaleString()}`
+                              : 'Non spécifié'
+                            }
                           </div>
                         </div>
                       </div>
@@ -179,14 +186,17 @@ export default function JobManagement() {
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         getStatusColor(job.status)
                       }`}>
-                        {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                        {job.status === 'published' ? 'Publié' : job.status === 'draft' ? 'Brouillon' : 'Fermé'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-gray-500">
+                      <button
+                        onClick={() => handleViewApplications(job.id as string)}
+                        className="flex items-center text-sm text-indigo-600 hover:text-indigo-900"
+                      >
                         <Users className="h-4 w-4 mr-1" />
-                        {job.applicationsCount || 0}
-                      </div>
+                        {job.applicationsCount || 0} candidatures
+                      </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex items-center">
@@ -198,45 +208,45 @@ export default function JobManagement() {
                       <div className="text-sm text-gray-500">
                         <div className="flex items-center">
                           <Calendar className="h-4 w-4 mr-1" />
-                          Posted: {new Date(job.createdAt).toLocaleDateString()}
+                          Publié le {new Date(job.createdAt as string).toLocaleDateString()}
                         </div>
                         <div className="flex items-center mt-1">
                           <Calendar className="h-4 w-4 mr-1" />
-                          Expires: {new Date(job.expiresAt).toLocaleDateString()}
+                          Expire le {new Date(job.expiresAt).toLocaleDateString()}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="relative">
                         <button
-                          onClick={() => setSelectedJob(selectedJob === job.id ? null : job.id)}
+                          onClick={() => setSelectedJob(selectedJob === job.id ? null : job.id as string)}
                           className="text-gray-400 hover:text-gray-500"
                         >
                           <MoreVertical className="h-5 w-5" />
                         </button>
                         {selectedJob === job.id && (
-                          <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                          <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
                             <div className="py-1" role="menu">
                               <Link
                                 to={`/jobs/${job.id}`}
                                 className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                               >
                                 <Eye className="h-4 w-4 mr-3" />
-                                View
+                                Voir
                               </Link>
                               <Link
                                 to={`/jobs/${job.id}/edit`}
                                 className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                               >
                                 <Edit2 className="h-4 w-4 mr-3" />
-                                Edit
+                                Modifier
                               </Link>
                               <button
-                                onClick={() => handleDeleteJob(job.id)}
+                                onClick={() => handleDeleteJob(job.id as string)}
                                 className="flex items-center w-full px-4 py-2 text-sm text-red-700 hover:bg-gray-100"
                               >
                                 <Trash2 className="h-4 w-4 mr-3" />
-                                Delete
+                                Supprimer
                               </button>
                             </div>
                           </div>

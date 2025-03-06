@@ -1,5 +1,4 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { supabase } from '../../lib/supabase';
 import type { User } from '../../types';
 import toast from 'react-hot-toast';
 import {ApiGeneric} from "../../api";
@@ -31,17 +30,17 @@ export const signIn = createAsyncThunk(
       });
 
       let company = {}
-      if(data.user.company){
+      if(data.user?.company){
         company = {company: data.user.company}
       }
 
       // Retourne les données de l'utilisateur avec son rôle
       return {
-        id: data.user.id,
-        email: data.user.email,
-        role: data.user.role,
-        created_at: data.user.created_at,
-        token: data.token,
+        id: data.user?.id,
+        email: data.user?.email,
+        role: data.user?.role,
+        created_at: data?.user?.created_at,
+        token: data?.token,
         ...company
       } as User;
     } catch (error: any) {
@@ -53,17 +52,26 @@ export const signIn = createAsyncThunk(
 
 export const signUp = createAsyncThunk(
   'auth/signUp',
-  async ({ email, password, role,first_name,last_name,company_name }: { email: string; password: string; role: 'company' | 'candidate' ;first_name: string;last_name: string;company_name:string}, { rejectWithValue }) => {
+  async ({ email, password, role, first_name, last_name, company_name }: { 
+    email: string; 
+    password: string; 
+    role: 'company' | 'candidate';
+    first_name: string;
+    last_name: string;
+    company_name: string;
+  }, { rejectWithValue }) => {
     try {
       const data = await api.onSend('/api/register', {
         method: 'POST',
-        data: { email, password, role,first_name,last_name,company_name },
+        data: { email, password, role, first_name, last_name, company_name },
         headers: {
           "Content-Type": "application/json"
         }
-      })
+      });
 
-      // Retourne les données de l'utilisateur avec son rôle
+      // Rediriger vers la page de vérification
+      window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
+
       return {
         id: data.user?.id,
         email: data.user?.email,
@@ -78,8 +86,6 @@ export const signUp = createAsyncThunk(
 
 export const signOut = createAsyncThunk('auth/signOut', async (_, { rejectWithValue }) => {
   try {
-    // const { error } = await supabase.auth.signOut();
-    // if (error) throw error;
     sessionStorage.removeItem('tia-wfs-token');
   } catch (error: any) {
     return rejectWithValue(error.message);
@@ -107,7 +113,7 @@ const authSlice = createSlice({
       .addCase(signUp.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload;
-        toast.success('Compte créé avec succès !');
+        toast.success('Compte créé avec succès ! Veuillez vérifier votre email.');
       })
       .addCase(signUp.rejected, (state, action) => {
         state.loading = false;

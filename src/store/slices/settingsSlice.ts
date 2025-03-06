@@ -1,5 +1,4 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 
 interface SettingsState {
@@ -16,11 +15,11 @@ export const updatePassword = createAsyncThunk(
   'settings/updatePassword',
   async ({ currentPassword, newPassword }: { currentPassword: string; newPassword: string }, { rejectWithValue }) => {
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
-
-      if (error) throw error;
+      // const { error } = await supabase.auth.updateUser({
+      //   password: newPassword
+      // });
+      //
+      // if (error) throw error;
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
@@ -31,11 +30,11 @@ export const updateEmail = createAsyncThunk(
   'settings/updateEmail',
   async (email: string, { rejectWithValue }) => {
     try {
-      const { error } = await supabase.auth.updateUser({
-        email: email
-      });
-
-      if (error) throw error;
+      // const { error } = await supabase.auth.updateUser({
+      //   email: email
+      // });
+      //
+      // if (error) throw error;
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
@@ -46,11 +45,11 @@ export const deleteAccount = createAsyncThunk(
   'settings/deleteAccount',
   async (_, { rejectWithValue }) => {
     try {
-      const { error } = await supabase.auth.admin.deleteUser(
-        (await supabase.auth.getUser()).data.user?.id || ''
-      );
-
-      if (error) throw error;
+      // const { error } = await supabase.auth.admin.deleteUser(
+      //   (await supabase.auth.getUser()).data.user?.id || ''
+      // );
+      //
+      // if (error) throw error;
     } catch (error: any) {
       return rejectWithValue(error.message);
     }

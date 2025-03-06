@@ -1,8 +1,8 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
-import { createJob } from '../../store/slices/jobsSlice';
+import { fetchJobDetails, updateJob } from '../../store/slices/jobsSlice';
 import { Briefcase, MapPin, DollarSign, Calendar, Clock, Globe, Building2, Trash2, Plus, AlertCircle, Info } from 'lucide-react';
 import { Company, Job } from "../../types";
 import { Field } from '../../components/ui/Field';
@@ -11,10 +11,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import type { JobFormData } from '../../lib/validations/job';
 
-export default function CreateJob() {
+export default function EditJob() {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
-  const { loading } = useSelector((state: RootState) => state.jobs);
+  const { selectedJob: job, loading } = useSelector((state: RootState) => state.jobs);
   const { user } = useSelector((state: RootState) => state.auth);
 
   const [step, setStep] = React.useState<'basics' | 'details' | 'preview'>('basics');
@@ -26,7 +27,8 @@ export default function CreateJob() {
     formState: { errors },
     trigger,
     watch,
-    setValue
+    setValue,
+    reset
   } = useForm<JobFormData>({
     resolver: zodResolver(jobSchema),
     defaultValues: {
@@ -44,13 +46,39 @@ export default function CreateJob() {
     }
   });
 
+  React.useEffect(() => {
+    if (id) {
+      dispatch(fetchJobDetails(id));
+    }
+  }, [dispatch, id]);
+
+  React.useEffect(() => {
+    if (job) {
+      reset({
+        title: job.title,
+        description: job.description,
+        type: job.type,
+        location: job.location,
+        remote: job.remote,
+        salaryMin: job.salaryMin?.toString() || '',
+        salaryMax: job.salaryMax?.toString() || '',
+        expiresAt: job.expiresAt,
+        status: job.status,
+        featured: job.featured,
+        requirements: job.requirements.length > 0 ? job.requirements : ['']
+      });
+      setRequirements(job.requirements.length > 0 ? job.requirements : ['']);
+    }
+  }, [job, reset]);
+
   const formData = watch();
 
   const onSubmit = async (data: JobFormData) => {
-    if (!user) return;
+    if (!user || !id) return;
 
     try {
-      await dispatch(createJob({
+      await dispatch(updateJob({
+        id,
         ...data,
         company: '/api/companies/'+(user as Company).company as any,
         requirements: data.requirements.filter(Boolean),
@@ -320,6 +348,18 @@ export default function CreateJob() {
           ]}
           helperText="En brouillon, l'offre ne sera visible que par vous jusqu'à sa publication."
         />
+
+        <div className="flex items-center">
+          <input
+            {...register('featured')}
+            type="checkbox"
+            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+          />
+          <label htmlFor="featured" className="ml-2 block text-sm text-gray-700">
+            Mettre en avant cette offre
+          </label>
+          <Info className="h-4 w-4 ml-2 text-gray-400 cursor-help" title="Les offres mises en avant apparaissent en premier dans les résultats de recherche" />
+        </div>
       </div>
 
       <div className="flex justify-between">
@@ -421,19 +461,27 @@ export default function CreateJob() {
           disabled={loading}
           className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
         >
-          {loading ? 'Publication...' : 'Publier l\'offre'}
+          {loading ? 'Enregistrement...' : 'Enregistrer les modifications'}
         </button>
       </div>
     </div>
   );
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Créer une nouvelle offre d'emploi</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Modifier l'offre d'emploi</h1>
           <p className="mt-2 text-sm text-gray-600">
-            Remplissez les informations ci-dessous pour publier une nouvelle offre d'emploi
+            Modifiez les informations de votre offre d'emploi
           </p>
         </div>
 

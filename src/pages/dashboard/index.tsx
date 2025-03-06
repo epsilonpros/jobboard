@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import CandidateOverview from './candidate/Overview';
 import CompanyOverview from './company/Overview';
+import AdminOverview from '../admin/Overview';
 import JobManagement from './JobManagement';
 import CandidateApplications from './candidate/Applications';
 import CompanyApplications from './company/Applications';
@@ -12,7 +13,14 @@ import Settings from './Settings';
 
 export default function Dashboard() {
   const { user } = useSelector((state: RootState) => state.auth);
-  const isCompany = user?.role === 'company';
+  
+  if (!user) return null;
+
+  if (user.role === 'admin') {
+    return <AdminOverview />;
+  }
+
+  const isCompany = user.role === 'company';
 
   return (
     <div className="min-h-screen bg-gray-50">

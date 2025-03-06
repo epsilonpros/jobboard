@@ -1,8 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { supabase } from '../../lib/supabase';
-import type {Company, Job} from '../../types';
+import type { Company, Job } from '../../types';
 import toast from 'react-hot-toast';
-import {ApiGeneric} from "../../api";
+import { ApiGeneric } from "../../api";
 import { RootState } from '../index';
 
 interface JobsState {
@@ -16,7 +15,9 @@ interface JobsState {
     location?: string;
     salary?: string;
     remote?: boolean;
+    page?: number;
   };
+  hasMore: boolean;
 }
 
 const initialState: JobsState = {
@@ -25,54 +26,25 @@ const initialState: JobsState = {
   loading: false,
   error: null,
   filters: {},
+  hasMore: true,
 };
 
-const api = new ApiGeneric()
+const api = new ApiGeneric();
 
 export const fetchJobs = createAsyncThunk(
   'jobs/fetchJobs',
-  async (filters: JobsState['filters'], { rejectWithValue }) => {
+  async (filters: JobsState['filters'], { getState, rejectWithValue }) => {
     try {
-      // let query = supabase
-      //   .from('jobs')
-      //   .select(`
-      //     *,
-      //     company:companies(name, logo_url)
-      //   `)
-      //   .eq('status', 'published')
-      //   .order('featured', { ascending: false })
-      //   .order('created_at', { ascending: false });
-      //
-      // if (filters.search) {
-      //   query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
-      // }
-      //
-      // if (filters.type) {
-      //   query = query.eq('type', filters.type);
-      // }
-      //
-      // if (filters.location) {
-      //   query = query.eq('location', filters.location);
-      // }
-      //
-      // if (filters.remote) {
-      //   query = query.eq('remote', true);
-      // }
-      //
-      // if (filters.salary) {
-      //   const [min, max] = filters.salary.split('-').map(Number);
-      //   if (max) {
-      //     query = query.and(`salary_min.gte.${min},salary_min.lte.${max}`);
-      //   } else {
-      //     query = query.gte('salary_min', min);
-      //   }
-      // }
+      api.page = filters.page || 1;
+      api.rowsPerPage = 12;
 
-      const data = await api.onSend('/api/jobs?status=published')
-      // const { data, error } = await query;
-
-      // if (error) throw error;
-      return data.member;
+      const data = await api.onSend('/api/jobs?status=published');
+      
+      return {
+        jobs: data.member,
+        page: filters.page || 1,
+        hasMore: data.member.length === 12 // Assuming 12 is the page size
+      };
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
@@ -81,20 +53,19 @@ export const fetchJobs = createAsyncThunk(
 
 export const fetchCompanyJobs = createAsyncThunk(
   'jobs/fetchCompanyJobs',
-  async (_, { getState,rejectWithValue }) => {
+  async (_, { getState, rejectWithValue }) => {
     try {
       const state = getState() as RootState;
-      const campany_id = (state.auth.user as Company).company
-      if (!campany_id) throw new Error('No user found');
+      const companyId = (state.auth.user as Company).company;
+      if (!companyId) throw new Error('No company found');
 
       const data = await api.onSend('/api/jobs', {
         method: 'GET',
         params: {
-          company: campany_id
+          company: companyId
         }
-      })
+      });
 
-      // if (error) throw error;
       return data.member;
     } catch (error: any) {
       return rejectWithValue(error.message);
@@ -106,13 +77,7 @@ export const fetchJobDetails = createAsyncThunk(
   'jobs/fetchJobDetails',
   async (jobId: string, { rejectWithValue }) => {
     try {
-      const data = await api.onSend(`/api/jobs/${jobId}`)
-      // Increment view count
-      // await supabase
-      //   .from('jobs')
-      //   .update({ views: (data.views || 0) + 1 })
-      //   .eq('id', jobId);
-
+      const data = await api.onSend(`/api/jobs/${jobId}`);
       return data;
     } catch (error: any) {
       return rejectWithValue(error.message);
@@ -128,9 +93,27 @@ export const createJob = createAsyncThunk(
         method: 'POST',
         data: job,
         headers: {
-            'Content-Type': 'application/ld+json'
+          'Content-Type': 'application/ld+json'
         }
-      })
+      });
+      return data;
+    } catch (error: any) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const updateJob = createAsyncThunk(
+  'jobs/updateJob',
+  async ({ id, ...job }: Partial<Job> & { id: string }, { rejectWithValue }) => {
+    try {
+      const data = await api.onSend(`/api/jobs/${id}`, {
+        method: 'PUT',
+        data: job,
+        headers: {
+          'Content-Type': 'application/ld+json'
+        }
+      });
       return data;
     } catch (error: any) {
       return rejectWithValue(error.message);
@@ -142,12 +125,9 @@ export const deleteJob = createAsyncThunk(
   'jobs/deleteJob',
   async (jobId: string, { rejectWithValue }) => {
     try {
-      const { error } = await supabase
-        .from('jobs')
-        .delete()
-        .eq('id', jobId);
-
-      if (error) throw error;
+      await api.onSend(`/api/jobs/${jobId}`, {
+        method: 'DELETE'
+      });
       return jobId;
     } catch (error: any) {
       return rejectWithValue(error.message);
@@ -174,7 +154,12 @@ const jobsSlice = createSlice({
       })
       .addCase(fetchJobs.fulfilled, (state, action) => {
         state.loading = false;
-        state.jobs = action.payload;
+        if (action.payload.page === 1) {
+          state.jobs = action.payload.jobs;
+        } else {
+          state.jobs = [...state.jobs, ...action.payload.jobs];
+        }
+        state.hasMore = action.payload.hasMore;
       })
       .addCase(fetchJobs.rejected, (state, action) => {
         state.loading = false;
@@ -214,9 +199,27 @@ const jobsSlice = createSlice({
       .addCase(createJob.fulfilled, (state, action) => {
         state.loading = false;
         state.jobs.unshift(action.payload);
-        toast.success('Job created successfully!');
+        toast.success('Offre créée avec succès !');
       })
       .addCase(createJob.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+        toast.error(action.payload as string);
+      })
+      .addCase(updateJob.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateJob.fulfilled, (state, action) => {
+        state.loading = false;
+        const index = state.jobs.findIndex(job => job.id === action.payload.id);
+        if (index !== -1) {
+          state.jobs[index] = action.payload;
+        }
+        state.selectedJob = action.payload;
+        toast.success('Offre mise à jour avec succès !');
+      })
+      .addCase(updateJob.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
         toast.error(action.payload as string);
@@ -228,7 +231,7 @@ const jobsSlice = createSlice({
       .addCase(deleteJob.fulfilled, (state, action) => {
         state.loading = false;
         state.jobs = state.jobs.filter(job => job.id !== action.payload);
-        toast.success('Job deleted successfully!');
+        toast.success('Offre supprimée avec succès !');
       })
       .addCase(deleteJob.rejected, (state, action) => {
         state.loading = false;

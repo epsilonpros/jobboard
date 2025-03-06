@@ -1,41 +1,127 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import {Link, useNavigate} from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AppDispatch, RootState } from '../../../store';
 import { fetchApplications } from '../../../store/slices/applicationsSlice';
-import { User, Calendar, CheckCircle, XCircle, Clock, Mail, Phone } from 'lucide-react';
+import { User, Calendar, CheckCircle, XCircle, Clock, Mail, Phone, Download, FileText } from 'lucide-react';
 import type { Application } from '../../../types';
-import { ApiGeneric} from "../../../api";
+import { ApiGeneric } from "../../../api";
 import toast from 'react-hot-toast';
 
-const api = new ApiGeneric()
+const api = new ApiGeneric();
+
 export default function CompanyApplications() {
   const dispatch = useDispatch<AppDispatch>();
-  const { applications, loading } = useSelector((state: RootState) => state.applications);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const { applications, loading, hasMore } = useSelector((state: RootState) => state.applications);
+  const [page, setPage] = React.useState(1);
+  const [loadingMore, setLoadingMore] = React.useState(false);
+  const observerTarget = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    dispatch(fetchApplications());
+    dispatch(fetchApplications({ page: 1 }));
   }, [dispatch]);
 
-  const updateApplicationStatus = async (applicationId: string, status: Application['status']) => {
-    // Implement status update logic
-      try {
-          await api.onSend(`/api/applications/${applicationId}/status`,{
-              method: "PUT",
-              data: {
-                  status
-              },
-              headers: {
-                  "Content-Type": 'application/json'
-              }
-          })
+  const loadMore = React.useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    await dispatch(fetchApplications({ page: nextPage }));
+    setPage(nextPage);
+    setLoadingMore(false);
+  }, [dispatch, page, loadingMore, hasMore]);
 
-          toast.success('le statut a été mis à jours avec succès !');
-          navigate(0)
-      }catch (e) {
-          toast.error('le statut n\'a pas été mis à jours !');
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && !loading && !loadingMore && hasMore) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [loading, loadingMore, hasMore, loadMore]);
+
+  const updateApplicationStatus = async (applicationId: string, status: Application['status']) => {
+    try {
+      await api.onSend(`/api/applications/${applicationId}/status`, {
+        method: "PUT",
+        data: {
+          status
+        },
+        headers: {
+          "Content-Type": 'application/json'
+        }
+      });
+
+      toast.success('Le statut a été mis à jour avec succès !');
+      navigate(0);
+    } catch (e) {
+      toast.error('Le statut n\'a pas été mis à jour !');
+    }
+  };
+
+  const handleDownloadCV = async (application: Application) => {
+    try {
+      // Priorité au CV spécifique à la candidature
+      const cvUrl = application.resume_url || application.candidate?.resume_url;
+      
+      if (!cvUrl) {
+        toast.error('Aucun CV disponible pour ce candidat');
+        return;
       }
+
+      // Si l'URL est de Cloudinary, on la télécharge directement
+      if (cvUrl.includes('cloudinary.com')) {
+        window.open(cvUrl, '_blank');
+      } else {
+        // Sinon, on passe par notre API pour le téléchargement
+        const response = await api.onSend(`/api/applications/${application.id}/cv`, {
+          responseType: 'blob'
+        });
+        
+        // Créer un lien temporaire pour le téléchargement
+        const url = window.URL.createObjectURL(new Blob([response]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `CV_${application.candidate?.firstName}_${application.candidate?.lastName}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      toast.error('Erreur lors du téléchargement du CV');
+    }
+  };
+
+  const handleDownloadCoverLetter = async (application: Application) => {
+    try {
+      if (!application.coverLetter) {
+        toast.error('Aucune lettre de motivation disponible');
+        return;
+      }
+
+      // Créer un fichier texte à partir de la lettre de motivation
+      const blob = new Blob([application.coverLetter], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `LM_${application.candidate?.firstName}_${application.candidate?.lastName}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error('Erreur lors du téléchargement de la lettre de motivation');
+    }
   };
 
   return (
@@ -43,7 +129,7 @@ export default function CompanyApplications() {
       <h1 className="text-2xl font-semibold text-gray-900">Candidatures reçues</h1>
 
       <div className="mt-8">
-        {loading ? (
+        {loading && page === 1 ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
           </div>
@@ -115,24 +201,41 @@ export default function CompanyApplications() {
                       </div>
                       <div className="flex space-x-4">
                         <button
-                          onClick={() => {/* Implement CV download */}}
-                          className="text-indigo-600 hover:text-indigo-500"
+                          onClick={() => handleDownloadCV(application)}
+                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         >
-                          Télécharger le CV
+                          <Download className="h-4 w-4 mr-2" />
+                          CV
                         </button>
-                        {/*<Link*/}
-                        {/*  to="#"*/}
-                        {/*  // to={`/dashboard/messaging?candidate=${application.candidate.id}`}*/}
-                        {/*  className="text-indigo-600 hover:text-indigo-500"*/}
-                        {/*>*/}
-                        {/*  Contacter*/}
-                        {/*</Link>*/}
+                        {application.coverLetter && (
+                          <button
+                            onClick={() => handleDownloadCoverLetter(application)}
+                            className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                          >
+                            <FileText className="h-4 w-4 mr-2" />
+                            Lettre de motivation
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
                 </li>
               ))}
             </ul>
+
+            {/* Loading indicator for infinite scroll */}
+            <div ref={observerTarget} className="flex justify-center py-4">
+              {loadingMore && (
+                <div className="animate-spin rounded-full h-8 w-8 border-4 border-indigo-600 border-t-transparent"></div>
+              )}
+            </div>
+
+            {/* End of list message */}
+            {!hasMore && applications.length > 0 && (
+              <div className="text-center py-4 text-gray-500">
+                Vous avez atteint la fin de la liste
+              </div>
+            )}
           </div>
         )}
       </div>

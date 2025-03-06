@@ -2,12 +2,12 @@ import React, {useEffect} from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
 import {fetchProfile, updateCandidateProfile} from '../../store/slices/profileSlice';
-import { Briefcase, GraduationCap, Award, MapPin, Mail, Globe, Github, Linkedin } from 'lucide-react';
+import { Briefcase, GraduationCap, Award, MapPin, Mail, Globe, Github, Linkedin, User, Building2, Calendar } from 'lucide-react';
+import { Field } from '../../components/ui/Field';
 
 export default function CandidateProfile() {
   const dispatch = useDispatch<AppDispatch>();
-  const { user } = useSelector((state: RootState) => state.auth);
-  const { loading,data } = useSelector((state: RootState) => state.profile);
+  const { loading, data } = useSelector((state: RootState) => state.profile);
 
   const [experiences, setExperiences] = React.useState([
     { id: '', company: '', title: '', startDate: '', endDate: '', current: false, description: '' }
@@ -38,7 +38,7 @@ export default function CandidateProfile() {
 
   useEffect(() => {
     setFormData(data);
-    setExperiences(data?.experiences ?? [{ id: '', school: '', degree: '', field: '', startDate: '', endDate: '' }])
+    setExperiences(data?.experiences ?? [{ id: '', company: '', title: '', startDate: '', endDate: '', current: false, description: '' }])
     setEducation(data?.education ?? [{ id: '', school: '', degree: '', field: '', startDate: '', endDate: '' }])
     setSkills(data?.skills ?? [{id: '', name: ''}])
   }, [data]);
@@ -50,6 +50,14 @@ export default function CandidateProfile() {
       experiences: experiences.filter(exp => exp.company && exp.title),
       education: education.filter(edu => edu.school && edu.degree),
       skills: skills.filter(Boolean),
+    }));
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
     }));
   };
 
@@ -77,62 +85,55 @@ export default function CandidateProfile() {
         {/* Basic Information */}
         <div className="bg-white shadow rounded-lg mb-6">
           <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg font-medium leading-6 text-gray-900">Basic Information</h3>
+            <h3 className="text-lg font-medium leading-6 text-gray-900">Informations de base</h3>
             <div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
               <div className="sm:col-span-3">
-                <label htmlFor="first_name" className="block text-sm font-medium text-gray-700">
-                  First name
-                </label>
-                <input
+                <Field
+                  label="Prénom"
+                  name="firstName"
                   type="text"
-                  name="first_name"
-                  id="first_name"
                   value={formData?.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  onChange={handleChange}
+                  icon={User}
+                  required
                 />
               </div>
 
               <div className="sm:col-span-3">
-                <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">
-                  Last name
-                </label>
-                <input
+                <Field
+                  label="Nom"
+                  name="lastName"
                   type="text"
-                  name="last_name"
-                  id="last_name"
                   value={formData?.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  onChange={handleChange}
+                  icon={User}
+                  required
                 />
               </div>
 
               <div className="sm:col-span-6">
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                  Professional Title
-                </label>
-                <input
-                  type="text"
+                <Field
+                  label="Titre professionnel"
                   name="title"
-                  id="title"
+                  type="text"
                   value={formData?.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  placeholder="e.g., Senior Software Engineer"
+                  onChange={handleChange}
+                  icon={Briefcase}
+                  placeholder="ex: Développeur Full Stack Senior"
+                  helperText="Votre poste actuel ou le titre qui décrit le mieux votre profil"
                 />
               </div>
 
               <div className="sm:col-span-6">
-                <label htmlFor="bio" className="block text-sm font-medium text-gray-700">
-                  Bio
-                </label>
-                <textarea
-                  id="bio"
+                <Field
+                  label="Bio"
                   name="bio"
-                  rows={4}
+                  type="textarea"
                   value={formData?.bio}
-                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  onChange={handleChange}
+                  placeholder="Présentez-vous en quelques lignes..."
+                  helperText="Une brève description de votre parcours, vos compétences et vos objectifs"
+                  rows={4}
                 />
               </div>
             </div>
@@ -143,13 +144,13 @@ export default function CandidateProfile() {
         <div className="bg-white shadow rounded-lg mb-6">
           <div className="px-4 py-5 sm:p-6">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium leading-6 text-gray-900">Experience</h3>
+              <h3 className="text-lg font-medium leading-6 text-gray-900">Expérience professionnelle</h3>
               <button
                 type="button"
                 onClick={addExperience}
                 className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
               >
-                Add Experience
+                Ajouter une expérience
               </button>
             </div>
             <div className="mt-6 space-y-6">
@@ -157,8 +158,9 @@ export default function CandidateProfile() {
                 <div key={index} className="border-b border-gray-200 pb-6">
                   <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                     <div className="sm:col-span-3">
-                      <label className="block text-sm font-medium text-gray-700">Company</label>
-                      <input
+                      <Field
+                        label="Entreprise"
+                        name={`experiences.${index}.company`}
                         type="text"
                         value={experience.company}
                         onChange={(e) => {
@@ -166,13 +168,14 @@ export default function CandidateProfile() {
                           newExperiences[index].company = e.target.value;
                           setExperiences(newExperiences);
                         }}
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        icon={Building2}
                       />
                     </div>
 
                     <div className="sm:col-span-3">
-                      <label className="block text-sm font-medium text-gray-700">Title</label>
-                      <input
+                      <Field
+                        label="Poste"
+                        name={`experiences.${index}.title`}
                         type="text"
                         value={experience.title}
                         onChange={(e) => {
@@ -180,13 +183,14 @@ export default function CandidateProfile() {
                           newExperiences[index].title = e.target.value;
                           setExperiences(newExperiences);
                         }}
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        icon={Briefcase}
                       />
                     </div>
 
                     <div className="sm:col-span-3">
-                      <label className="block text-sm font-medium text-gray-700">Start Date</label>
-                      <input
+                      <Field
+                        label="Date de début"
+                        name={`experiences.${index}.startDate`}
                         type="date"
                         value={experience.startDate}
                         onChange={(e) => {
@@ -194,22 +198,23 @@ export default function CandidateProfile() {
                           newExperiences[index].startDate = e.target.value;
                           setExperiences(newExperiences);
                         }}
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        icon={Calendar}
                       />
                     </div>
 
                     <div className="sm:col-span-3">
-                      <label className="block text-sm font-medium text-gray-700">End Date</label>
-                      <input
+                      <Field
+                        label="Date de fin"
+                        name={`experiences.${index}.endDate`}
                         type="date"
                         value={experience.endDate}
-                        disabled={experience.current}
                         onChange={(e) => {
                           const newExperiences = [...experiences];
                           newExperiences[index].endDate = e.target.value;
                           setExperiences(newExperiences);
                         }}
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        icon={Calendar}
+                        disabled={experience.current}
                       />
                     </div>
 
@@ -229,22 +234,24 @@ export default function CandidateProfile() {
                           className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                         />
                         <label className="ml-2 block text-sm text-gray-700">
-                          I currently work here
+                          Je travaille actuellement ici
                         </label>
                       </div>
                     </div>
 
                     <div className="sm:col-span-6">
-                      <label className="block text-sm font-medium text-gray-700">Description</label>
-                      <textarea
-                        rows={3}
+                      <Field
+                        label="Description"
+                        name={`experiences.${index}.description`}
+                        type="textarea"
                         value={experience.description}
                         onChange={(e) => {
                           const newExperiences = [...experiences];
                           newExperiences[index].description = e.target.value;
                           setExperiences(newExperiences);
                         }}
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        rows={3}
+                        placeholder="Décrivez vos responsabilités et réalisations..."
                       />
                     </div>
                   </div>
@@ -258,13 +265,13 @@ export default function CandidateProfile() {
         <div className="bg-white shadow rounded-lg mb-6">
           <div className="px-4 py-5 sm:p-6">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium leading-6 text-gray-900">Education</h3>
+              <h3 className="text-lg font-medium leading-6 text-gray-900">Formation</h3>
               <button
                 type="button"
                 onClick={addEducation}
                 className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
               >
-                Add Education
+                Ajouter une formation
               </button>
             </div>
             <div className="mt-6 space-y-6">
@@ -272,8 +279,9 @@ export default function CandidateProfile() {
                 <div key={index} className="border-b border-gray-200 pb-6">
                   <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                     <div className="sm:col-span-3">
-                      <label className="block text-sm font-medium text-gray-700">School</label>
-                      <input
+                      <Field
+                        label="École / Université"
+                        name={`education.${index}.school`}
                         type="text"
                         value={edu.school}
                         onChange={(e) => {
@@ -281,13 +289,14 @@ export default function CandidateProfile() {
                           newEducation[index].school = e.target.value;
                           setEducation(newEducation);
                         }}
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        icon={GraduationCap}
                       />
                     </div>
 
                     <div className="sm:col-span-3">
-                      <label className="block text-sm font-medium text-gray-700">Degree</label>
-                      <input
+                      <Field
+                        label="Diplôme"
+                        name={`education.${index}.degree`}
                         type="text"
                         value={edu.degree}
                         onChange={(e) => {
@@ -295,13 +304,14 @@ export default function CandidateProfile() {
                           newEducation[index].degree = e.target.value;
                           setEducation(newEducation);
                         }}
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        icon={Award}
                       />
                     </div>
 
                     <div className="sm:col-span-3">
-                      <label className="block text-sm font-medium text-gray-700">Field of Study</label>
-                      <input
+                      <Field
+                        label="Domaine d'études"
+                        name={`education.${index}.field`}
                         type="text"
                         value={edu.field}
                         onChange={(e) => {
@@ -309,13 +319,14 @@ export default function CandidateProfile() {
                           newEducation[index].field = e.target.value;
                           setEducation(newEducation);
                         }}
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        icon={GraduationCap}
                       />
                     </div>
 
                     <div className="sm:col-span-3">
-                      <label className="block text-sm font-medium text-gray-700">Start Date</label>
-                      <input
+                      <Field
+                        label="Date de début"
+                        name={`education.${index}.startDate`}
                         type="date"
                         value={edu.startDate}
                         onChange={(e) => {
@@ -323,13 +334,14 @@ export default function CandidateProfile() {
                           newEducation[index].startDate = e.target.value;
                           setEducation(newEducation);
                         }}
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        icon={Calendar}
                       />
                     </div>
 
                     <div className="sm:col-span-3">
-                      <label className="block text-sm font-medium text-gray-700">End Date</label>
-                      <input
+                      <Field
+                        label="Date de fin"
+                        name={`education.${index}.endDate`}
                         type="date"
                         value={edu.endDate}
                         onChange={(e) => {
@@ -337,7 +349,7 @@ export default function CandidateProfile() {
                           newEducation[index].endDate = e.target.value;
                           setEducation(newEducation);
                         }}
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        icon={Calendar}
                       />
                     </div>
                   </div>
@@ -351,30 +363,30 @@ export default function CandidateProfile() {
         <div className="bg-white shadow rounded-lg mb-6">
           <div className="px-4 py-5 sm:p-6">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium leading-6 text-gray-900">Skills</h3>
+              <h3 className="text-lg font-medium leading-6 text-gray-900">Compétences</h3>
               <button
                 type="button"
                 onClick={addSkill}
                 className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
               >
-                Add Skill
+                Ajouter une compétence
               </button>
             </div>
             <div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
               {skills.map((skill, index) => (
-                <div key={index}>
-                  <input
-                    type="text"
-                    value={skill.name}
-                    onChange={(e) => {
-                      const newSkills = [...skills];
-                      newSkills[index].name = e.target.value;
-                      setSkills(newSkills);
-                    }}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    placeholder="e.g., JavaScript"
-                  />
-                </div>
+                <Field
+                  key={index}
+                  label={index === 0 ? "Compétence" : ""}
+                  name={`skills.${index}.name`}
+                  type="text"
+                  value={skill.name}
+                  onChange={(e) => {
+                    const newSkills = [...skills];
+                    newSkills[index].name = e.target.value;
+                    setSkills(newSkills);
+                  }}
+                  placeholder="ex: JavaScript"
+                />
               ))}
             </div>
           </div>
@@ -383,44 +395,30 @@ export default function CandidateProfile() {
         {/* Links and Preferences */}
         <div className="bg-white shadow rounded-lg mb-6">
           <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg font-medium leading-6 text-gray-900">Links and Preferences</h3>
+            <h3 className="text-lg font-medium leading-6 text-gray-900">Liens et préférences</h3>
             <div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
               <div className="sm:col-span-3">
-                <label htmlFor="portfolio_url" className="block text-sm font-medium text-gray-700">
-                  Portfolio URL
-                </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Globe className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    type="url"
-                    name="portfolio_url"
-                    id="portfolio_url"
-                    value={formData?.portfolioUrl}
-                    onChange={(e) => setFormData({ ...formData, portfolioUrl: e.target.value })}
-                    className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
-                  />
-                </div>
+                <Field
+                  label="Portfolio URL"
+                  name="portfolio_url"
+                  type="url"
+                  value={formData?.portfolio_url}
+                  onChange={handleChange}
+                  icon={Globe}
+                  placeholder="https://portfolio.com"
+                />
               </div>
 
               <div className="sm:col-span-3">
-                <label htmlFor="linkedin_url" className="block text-sm font-medium text-gray-700">
-                  LinkedIn URL
-                </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Linkedin className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    type="url"
-                    name="linkedin_url"
-                    id="linkedin_url"
-                    value={formData?.linkedinUrl}
-                    onChange={(e) => setFormData({ ...formData, linkedinUrl: e.target.value })}
-                    className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
-                  />
-                </div>
+                <Field
+                  label="LinkedIn URL"
+                  name="linkedin_url"
+                  type="url"
+                  value={formData?.linkedin_url}
+                  onChange={handleChange}
+                  icon={Linkedin}
+                  placeholder="https://linkedin.com/in/username"
+                />
               </div>
 
               <div className="sm:col-span-6">
@@ -430,16 +428,16 @@ export default function CandidateProfile() {
                       id="available_for_hire"
                       name="available_for_hire"
                       type="checkbox"
-                      checked={formData?.availableForHire}
-                      onChange={(e) => setFormData({ ...formData, availableForHire: e.target.checked })}
+                      checked={formData?.available_for_hire}
+                      onChange={(e) => setFormData({ ...formData, available_for_hire: e.target.checked })}
                       className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
                     />
                   </div>
                   <div className="ml-3 text-sm">
                     <label htmlFor="available_for_hire" className="font-medium text-gray-700">
-                      Available for hire
+                      Disponible pour un emploi
                     </label>
-                    <p className="text-gray-500">Let employers know you're open to new opportunities</p>
+                    <p className="text-gray-500">Indiquez aux recruteurs que vous êtes ouvert aux opportunités</p>
                   </div>
                 </div>
               </div>
@@ -451,16 +449,16 @@ export default function CandidateProfile() {
                       id="willing_to_relocate"
                       name="willing_to_relocate"
                       type="checkbox"
-                      checked={formData?.willingToRelocate}
-                      onChange={(e) => setFormData({ ...formData, willingToRelocate: e.target.checked })}
+                      checked={formData?.willing_to_relocate}
+                      onChange={(e) => setFormData({ ...formData, willing_to_relocate: e.target.checked })}
                       className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
                     />
                   </div>
                   <div className="ml-3 text-sm">
                     <label htmlFor="willing_to_relocate" className="font-medium text-gray-700">
-                      Willing to relocate
+                      Prêt à déménager
                     </label>
-                    <p className="text-gray-500">Indicate if you're open to job opportunities in other locations</p>
+                    <p className="text-gray-500">Indiquez si vous êtes ouvert aux opportunités dans d'autres villes</p>
                   </div>
                 </div>
               </div>
@@ -475,7 +473,7 @@ export default function CandidateProfile() {
             disabled={loading}
             className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
-            {loading ? 'Saving...' : 'Save Profile'}
+            {loading ? 'Enregistrement...' : 'Enregistrer le profil'}
           </button>
         </div>
       </form>

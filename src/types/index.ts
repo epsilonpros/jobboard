@@ -8,12 +8,16 @@ export interface User {
 }
 
 export interface Company extends User {
-  company?: number
+  company?: number;
   name: string;
   description: string;
   logo_url?: string;
   website?: string;
   verified: boolean;
+  featured?: boolean;
+  size?: string;
+  industry?: string;
+  location?: string;
 }
 
 export interface Candidate extends User {
@@ -28,6 +32,10 @@ export interface Candidate extends User {
   portfolio_url?: string;
   github_url?: string;
   linkedin_url?: string;
+  resume_url?: string;
+  available_for_hire: boolean;
+  willing_to_relocate: boolean;
+  preferred_location?: string;
 }
 
 export interface Experience {
@@ -64,6 +72,8 @@ export interface Job {
   expiresAt: string;
   status: 'draft' | 'published' | 'closed';
   featured?: boolean;
+  views?: number;
+  applicationsCount?: number;
 }
 
 export interface Application {
@@ -74,4 +84,7 @@ export interface Application {
   created_at: string;
   updated_at: string;
   cover_letter?: string;
+  resume_url?: string;
+  job?: Job;
+  candidate?: Candidate;
 }

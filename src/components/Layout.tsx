@@ -32,7 +32,6 @@ export default function Layout() {
     }else {
       setLoading(false);
     }
-
   }, []);
 
   // Navigation de base pour les visiteurs
@@ -48,12 +47,16 @@ export default function Layout() {
     { name: 'Offres d\'emploi', href: '/dashboard/jobs' },
     { name: 'Candidatures', href: '/dashboard/applications' },
     { name: 'Candidats', href: '/dashboard/candidates' },
+  ] : (user?.role === 'admin' ? [
+    { name: 'Entreprises', href: '/admin/companies' },
+    { name: 'Offres d\'emploi', href: '/admin/jobs' },
+    { name: 'Candidats', href: '/admin/candidates' },
   ] : [
     // { name: 'Tableau de bord', href: '/dashboard' },
     { name: 'Mes candidatures', href: '/dashboard/applications' },
     { name: 'Offres d\'emploi', href: '/jobs' },
     { name: 'Entreprises', href: '/companies' },
-  ];
+  ]);
 
   const handleSignOut = () => {
     dispatch(signOut());
@@ -61,7 +64,19 @@ export default function Layout() {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative">
+            <div className="h-24 w-24 rounded-full border-t-4 border-b-4 border-indigo-600 animate-spin"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <img src={twfs} alt="TIA WFS" className="h-12 w-auto animate-pulse" />
+            </div>
+          </div>
+          <p className="mt-4 text-sm text-gray-500 animate-pulse">Chargement...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
