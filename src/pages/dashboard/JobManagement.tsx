@@ -241,13 +241,13 @@ export default function JobManagement() {
                                 <Edit2 className="h-4 w-4 mr-3" />
                                 Modifier
                               </Link>
-                              <button
+                              {job.applicationsCount === 0 && <button
                                 onClick={() => handleDeleteJob(job.id as string)}
                                 className="flex items-center w-full px-4 py-2 text-sm text-red-700 hover:bg-gray-100"
                               >
                                 <Trash2 className="h-4 w-4 mr-3" />
                                 Supprimer
-                              </button>
+                              </button>}
                             </div>
                           </div>
                         )}

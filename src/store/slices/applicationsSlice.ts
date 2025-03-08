@@ -22,7 +22,7 @@ const api = new ApiGeneric();
 
 export const fetchApplications = createAsyncThunk(
   'applications/fetchApplications',
-  async ({ page = 1, status }: { page?: number; status?: string }, { getState, rejectWithValue }) => {
+  async ({ page = 1, status,job }: { page?: number; status?: string,job?: string }, { getState, rejectWithValue }) => {
     try {
       const state = getState() as RootState;
       api.page = page;
@@ -35,6 +35,10 @@ export const fetchApplications = createAsyncThunk(
       }
       if (status && status !== 'all') {
         url += `&status=${status}`;
+      }
+
+      if(job){
+        url += `&job=${job}`;
       }
 
       const data = await api.onSend(`/api/applications?${url}`);

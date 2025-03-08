@@ -133,13 +133,13 @@ export default function Layout() {
                         {showProfileMenu && (
                             <div
                                 className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 py-1 z-50">
-                              <Link
+                              {user.role !== 'admin' && <Link
                                   to="/profile"
                                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                   onClick={() => setShowProfileMenu(false)}
                               >
                                 Paramètres
-                              </Link>
+                              </Link>}
                               <button
                                   onClick={handleSignOut}
                                   className="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50"

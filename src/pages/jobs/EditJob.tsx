@@ -62,7 +62,7 @@ export default function EditJob() {
         remote: job.remote,
         salaryMin: job.salaryMin?.toString() || '',
         salaryMax: job.salaryMax?.toString() || '',
-        expiresAt: job.expiresAt,
+        expiresAt: new Date(job.expiresAt).toISOString().split('T')[0],
         status: job.status,
         featured: job.featured,
         requirements: job.requirements.length > 0 ? job.requirements : ['']
@@ -349,17 +349,6 @@ export default function EditJob() {
           helperText="En brouillon, l'offre ne sera visible que par vous jusqu'à sa publication."
         />
 
-        <div className="flex items-center">
-          <input
-            {...register('featured')}
-            type="checkbox"
-            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-          />
-          <label htmlFor="featured" className="ml-2 block text-sm text-gray-700">
-            Mettre en avant cette offre
-          </label>
-          <Info className="h-4 w-4 ml-2 text-gray-400 cursor-help" title="Les offres mises en avant apparaissent en premier dans les résultats de recherche" />
-        </div>
       </div>
 
       <div className="flex justify-between">

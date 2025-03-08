@@ -6,6 +6,8 @@ import { AppDispatch, RootState } from '../../store';
 import { fetchJobDetails, clearSelectedJob, fetchJobs } from '../../store/slices/jobsSlice';
 import { applyToJob } from '../../store/slices/applicationsSlice';
 import toast from 'react-hot-toast';
+import { AdvancedImage } from '@cloudinary/react';
+import {getCloudinaryImage} from "../../lib/utils.ts";
 
 export default function JobDetails() {
   const { id } = useParams<{ id: string }>();
@@ -251,12 +253,10 @@ export default function JobDetails() {
             {/* Company Card */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <div className="flex items-center mb-6">
-                {job.company.logo_url ? (
-                  <img
-                    src={job.company.logo_url}
-                    alt={job.company.name}
-                    className="h-16 w-16 rounded-lg object-cover"
-                  />
+                {job.company.logoUrl ? (
+                  <div className="h-16 w-16 rounded-lg object-cover">
+                    <AdvancedImage cldImg={getCloudinaryImage(job.company?.logoUrl)}/>
+                  </div>
                 ) : (
                   <div className="h-16 w-16 rounded-lg bg-indigo-100 flex items-center justify-center">
                     <Building2 className="h-8 w-8 text-indigo-600" />

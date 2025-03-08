@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { Building2, MapPin, Globe, Users, Briefcase, Star, ExternalLink, Mail, Clock, DollarSign, ChevronRight } from 'lucide-react';
 import { ApiGeneric } from "../../api";
 import toast from 'react-hot-toast';
+import { AdvancedImage } from '@cloudinary/react';
+import {getCloudinaryImage} from "../../lib/utils.ts";
 
 interface CompanyDetails {
   id: string;
@@ -112,12 +114,12 @@ export default function CompanyDetails() {
 
           <div className="flex items-center">
             <div className="h-24 w-24 rounded-xl bg-white p-2 shadow-lg">
-              {company.logo_url ? (
-                <img
-                  src={company.logo_url}
-                  alt={company.name}
+              {company.logoUrl ? (
+                <div
                   className="w-full h-full object-cover rounded-lg"
-                />
+                >
+                  <AdvancedImage cldImg={getCloudinaryImage(company?.logoUrl)}/>
+                </div>
               ) : (
                 <div className="w-full h-full rounded-lg bg-indigo-50 flex items-center justify-center">
                   <Building2 className="h-12 w-12 text-indigo-600" />

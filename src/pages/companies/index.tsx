@@ -2,6 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Building2, MapPin, Globe, Users, Briefcase, Filter, ChevronRight, Star, ExternalLink, Mail } from 'lucide-react';
 import { ApiGeneric } from "../../api";
+import { AdvancedImage } from '@cloudinary/react';
+import {getCloudinaryImage} from "../../lib/utils.ts";
 
 interface Company {
   id: string;
@@ -229,12 +231,12 @@ export default function Companies() {
                     <div className="absolute inset-0 bg-black opacity-10"></div>
                     <div className="absolute -bottom-10 left-6">
                       <div className="h-20 w-20 rounded-xl bg-white p-1 shadow-lg">
-                        {company.logo_url ? (
-                          <img
-                            src={company.logo_url}
-                            alt={company.name}
-                            className="w-full h-full object-cover rounded-lg"
-                          />
+                        {company.logoUrl ? (
+                            <div
+                                className="w-full h-full object-cover rounded-lg"
+                            >
+                              <AdvancedImage cldImg={getCloudinaryImage(company?.logoUrl)}/>
+                            </div>
                         ) : (
                           <div className="w-full h-full rounded-lg bg-indigo-50 flex items-center justify-center">
                             <Building2 className="h-8 w-8 text-indigo-600" />
@@ -255,7 +257,7 @@ export default function Companies() {
                       )}
                     </div>
 
-                    <p className="text-gray-600 text-sm mb-6 line-clamp-2">
+                    <p className="text-gray-600 text-sm mb-6 line-clamp-3">
                       {company.description}
                     </p>
 

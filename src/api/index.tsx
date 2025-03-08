@@ -5,19 +5,13 @@ export const url = import.meta.env.VITE_API_URL;
 export class ApiErrors {
     constructor(public errors: object[]) {
     }
-
-    // public getErrors() {
-    //     return this.errors.reduce(
-    //         (p: any, c: any) => ({...p, [c.propertyPath]: c.message}),
-    //         {}
-    //     );
-    // }
 }
+
 class ToSingleTon {
     private static instance: ToSingleTon;
 
     public static get getInstance() {
-        this.instance = this.instance ? this.instance :  new this()
+        this.instance = this.instance ? this.instance : new this()
         return this.instance;
     }
 
@@ -58,10 +52,17 @@ export class ApiGeneric {
         withCredentials: true,
     };
     private singleton: ToSingleTon = ToSingleTon.getInstance;
+
     constructor() {
-        if (sessionStorage.getItem("tia-wfs-token")) {
-            this._headers.Authorization =
-                "Bearer " + sessionStorage.getItem("tia-wfs-token");
+        this.updateAuthHeader();
+    }
+
+    private updateAuthHeader() {
+        const token = sessionStorage.getItem("tia-wfs-token");
+        if (token) {
+            this._headers.Authorization = "Bearer " + token;
+        } else {
+            delete this._headers.Authorization;
         }
     }
 
@@ -90,6 +91,8 @@ export class ApiGeneric {
     }
 
     async onSend(endpoint: string, options: AxiosRequestConfig = {}) {
+        // Update auth header before each request
+        this.updateAuthHeader();
 
         if (options?.headers) {
             this._headers = {
@@ -120,24 +123,37 @@ export class ApiGeneric {
             options.headers["Content-Type"] = "multipart/form-data";
         }
 
-        const response = await axios(options)
-            .then((responses) => {
-                return responses;
-            })
-            .catch((error) => {
-                return Object.assign({}, error).response;
-            });
+        try {
+            const response = await axios(options);
 
-        if (response?.status === 204) {
-            return null;
-        }
+            if (response?.status === 204) {
+                return null;
+            }
 
-        if (response?.ok || response?.status === 200 || response?.status === 201) {
-            return response.data;
-        } else {
+            if (response?.ok || response?.status === 200 || response?.status === 201) {
+                return response.data;
+            }
+        } catch (error: any) {
+            const response = Object.assign({}, error).response;
+
+            // Handle token expiration
+            if (response?.status === 401 && response?.data?.errors?.message === "Expired JWT Token") {
+                // Clear expired token
+                sessionStorage.removeItem("tia-wfs-token");
+
+                // Redirect to login if not already there
+                if (!window.location.pathname.includes('/sign-in')) {
+                    window.location.href = '/sign-in';
+                }
+
+                throw new ApiErrors([{message: "Session expirée, veuillez vous reconnecter"}]);
+            }
+
             if (response?.data) {
                 throw new ApiErrors(response.data);
             }
+
+            throw new ApiErrors([{message: "Une erreur est survenue"}]);
         }
     }
 

@@ -5,6 +5,8 @@ import { Search, MapPin, Building2, Clock, Briefcase, DollarSign, Filter, Calend
 import { AppDispatch, RootState } from '../../store';
 import { fetchJobs, setFilters } from '../../store/slices/jobsSlice';
 import type { Job } from '../../types';
+import { AdvancedImage } from '@cloudinary/react';
+import {getCloudinaryImage} from "../../lib/utils.ts";
 
 export default function JobList() {
   const dispatch = useDispatch<AppDispatch>();
@@ -200,12 +202,12 @@ export default function JobList() {
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center">
                         <div className="h-12 w-12 rounded-lg bg-indigo-100 flex items-center justify-center">
-                          {job.company.logo_url ? (
-                            <img
-                              src={job.company.logo_url}
-                              alt={job.company.name}
+                          {job.company.logoUrl ? (
+                            <div
                               className="h-8 w-8 object-contain"
-                            />
+                            >
+                              <AdvancedImage cldImg={getCloudinaryImage(job?.company?.logoUrl)}/>
+                            </div>
                           ) : (
                             <Building2 className="h-6 w-6 text-indigo-600" />
                           )}

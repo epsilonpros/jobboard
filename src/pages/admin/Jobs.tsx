@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Briefcase, MapPin, Building2, Star, Search, Filter, DollarSign } from 'lucide-react';
 import { ApiGeneric } from "../../api";
 import toast from 'react-hot-toast';

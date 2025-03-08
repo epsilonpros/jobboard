@@ -1,9 +1,9 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
+import {useNavigate, useLocation} from 'react-router-dom';
 import { AppDispatch, RootState } from '../../../store';
 import { fetchApplications } from '../../../store/slices/applicationsSlice';
-import { User, Calendar, CheckCircle, XCircle, Clock, Mail, Phone, Download, FileText } from 'lucide-react';
+import { User, Calendar, Mail, Phone, Download, FileText } from 'lucide-react';
 import type { Application } from '../../../types';
 import { ApiGeneric } from "../../../api";
 import toast from 'react-hot-toast';
@@ -17,9 +17,10 @@ export default function CompanyApplications() {
   const [page, setPage] = React.useState(1);
   const [loadingMore, setLoadingMore] = React.useState(false);
   const observerTarget = React.useRef<HTMLDivElement>(null);
-
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
   React.useEffect(() => {
-    dispatch(fetchApplications({ page: 1 }));
+    dispatch(fetchApplications({ page: 1,job: params.get('job') ?? null }));
   }, [dispatch]);
 
   const loadMore = React.useCallback(async () => {

@@ -5,6 +5,8 @@ import { AppDispatch, RootState } from '../../../store';
 import { fetchApplications } from '../../../store/slices/applicationsSlice';
 import { Building2, Calendar, CheckCircle, XCircle, Clock, Search, Filter, MapPin, DollarSign, Briefcase, FileText, Download } from 'lucide-react';
 import type { Application } from '../../../types';
+import { AdvancedImage } from '@cloudinary/react';
+import {getCloudinaryImage} from "../../../lib/utils.ts";
 
 export default function CandidateApplications() {
   const dispatch = useDispatch<AppDispatch>();
@@ -183,12 +185,12 @@ export default function CandidateApplications() {
                     <div className="flex items-start justify-between">
                       <div className="flex items-center">
                         <div className="h-12 w-12 rounded-lg bg-indigo-100 flex items-center justify-center">
-                          {application.job.company.logo_url ? (
-                            <img
-                              src={application.job.company.logo_url}
-                              alt={application.job.company.name}
+                          {application.job.company.logoUrl ? (
+                            <div
                               className="h-8 w-8 object-contain"
-                            />
+                            >
+                              <AdvancedImage cldImg={getCloudinaryImage(application.job?.company?.logoUrl)}/>
+                            </div>
                           ) : (
                             <Building2 className="h-6 w-6 text-indigo-600" />
                           )}
